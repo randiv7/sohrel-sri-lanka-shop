@@ -138,7 +138,7 @@
   }
   
   .product-card-sohrel {
-    @apply bg-background border border-brand-border overflow-hidden group cursor-pointer transition-all duration-300;
+    @apply bg-background border border-brand-border overflow-hidden cursor-pointer transition-all duration-300;
     box-shadow: var(--shadow-minimal);
   }
   

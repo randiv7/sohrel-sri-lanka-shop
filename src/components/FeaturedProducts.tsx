@@ -137,7 +137,7 @@ const FeaturedProducts = () => {
         <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {displayProducts.map((product) => (
-            <div key={product.id} className="product-card-sohrel">
+            <div key={product.id} className="product-card-sohrel group">
               <div className="relative aspect-square overflow-hidden">
                 <img
                   src={getProductImage(product)}
