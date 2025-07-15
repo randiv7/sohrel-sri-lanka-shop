@@ -47,6 +47,39 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -79,6 +112,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cart_items_product_id_fkey"
             columns: ["product_id"]
@@ -235,6 +275,60 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_type: string
+          new_quantity: number
+          notes: string | null
+          order_id: string | null
+          previous_quantity: number
+          product_variant_id: string
+          quantity_change: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type: string
+          new_quantity: number
+          notes?: string | null
+          order_id?: string | null
+          previous_quantity: number
+          product_variant_id: string
+          quantity_change: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type?: string
+          new_quantity?: number
+          notes?: string | null
+          order_id?: string | null
+          previous_quantity?: number
+          product_variant_id?: string
+          quantity_change?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_variant_id_fkey"
+            columns: ["product_variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletters: {
         Row: {
           email: string
@@ -305,6 +399,13 @@ export type Database = {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -313,6 +414,44 @@ export type Database = {
             columns: ["product_variant_id"]
             isOneToOne: false
             referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          previous_status: string | null
+          status: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id: string
+          previous_status?: string | null
+          status: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          order_id?: string
+          previous_status?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -416,6 +555,13 @@ export type Database = {
             foreignKeyName: "product_images_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -459,6 +605,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_variants_product_id_fkey"
             columns: ["product_id"]
@@ -631,6 +784,13 @@ export type Database = {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -707,6 +867,13 @@ export type Database = {
             foreignKeyName: "wishlists_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_search"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -714,7 +881,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      product_search: {
+        Row: {
+          category_name: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          name: string | null
+          price: number | null
+          sale_price: number | null
+          search_vector: unknown | null
+          short_description: string | null
+          sku: string | null
+          subcategory_name: string | null
+          tags: string[] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_admin_user: {
@@ -732,6 +916,20 @@ export type Database = {
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
+      }
+      refresh_product_search: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      track_inventory_movement: {
+        Args: {
+          p_variant_id: string
+          p_movement_type: string
+          p_quantity_change: number
+          p_order_id?: string
+          p_notes?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
