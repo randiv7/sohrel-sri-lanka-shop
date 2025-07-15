@@ -725,6 +725,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      has_admin_permission: {
+        Args: { permission_key: string; user_uuid?: string }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { user_uuid?: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
