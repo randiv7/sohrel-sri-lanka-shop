@@ -43,6 +43,10 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     return primaryImage?.image_url || '/placeholder.svg';
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = '/placeholder.svg';
+  };
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -70,6 +74,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
             src={getProductImage(product)}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={handleImageError}
           />
         </Link>
         {product.sale_price && (
