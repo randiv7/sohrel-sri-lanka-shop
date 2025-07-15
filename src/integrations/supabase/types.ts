@@ -182,6 +182,309 @@ export type Database = {
           },
         ]
       }
+      cod_delivery_attempts: {
+        Row: {
+          amount_collected: number | null
+          attempt_number: number
+          attempted_at: string | null
+          cod_order_id: string
+          created_at: string
+          customer_feedback: string | null
+          delivery_agent_id: string | null
+          delivery_notes: string | null
+          failure_reason: string | null
+          id: string
+          location_coordinates: unknown | null
+          payment_method_used: string | null
+          photo_proof_url: string | null
+          scheduled_at: string
+          signature_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_collected?: number | null
+          attempt_number?: number
+          attempted_at?: string | null
+          cod_order_id: string
+          created_at?: string
+          customer_feedback?: string | null
+          delivery_agent_id?: string | null
+          delivery_notes?: string | null
+          failure_reason?: string | null
+          id?: string
+          location_coordinates?: unknown | null
+          payment_method_used?: string | null
+          photo_proof_url?: string | null
+          scheduled_at: string
+          signature_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_collected?: number | null
+          attempt_number?: number
+          attempted_at?: string | null
+          cod_order_id?: string
+          created_at?: string
+          customer_feedback?: string | null
+          delivery_agent_id?: string | null
+          delivery_notes?: string | null
+          failure_reason?: string | null
+          id?: string
+          location_coordinates?: unknown | null
+          payment_method_used?: string | null
+          photo_proof_url?: string | null
+          scheduled_at?: string
+          signature_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cod_delivery_attempts_cod_order_id_fkey"
+            columns: ["cod_order_id"]
+            isOneToOne: false
+            referencedRelation: "cod_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cod_fees_config: {
+        Row: {
+          created_at: string
+          district: string | null
+          effective_from: string
+          effective_until: string | null
+          fee_type: string
+          fee_value: number
+          id: string
+          is_active: boolean
+          max_fee_amount: number | null
+          max_order_amount: number | null
+          min_order_amount: number
+          priority: number
+          province: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          district?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_type?: string
+          fee_value: number
+          id?: string
+          is_active?: boolean
+          max_fee_amount?: number | null
+          max_order_amount?: number | null
+          min_order_amount?: number
+          priority?: number
+          province: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          district?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_type?: string
+          fee_value?: number
+          id?: string
+          is_active?: boolean
+          max_fee_amount?: number | null
+          max_order_amount?: number | null
+          min_order_amount?: number
+          priority?: number
+          province?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cod_orders: {
+        Row: {
+          cod_amount: number
+          cod_fee: number
+          created_at: string
+          customer_availability: Json | null
+          delivery_preference: string | null
+          id: string
+          is_high_value: boolean | null
+          max_verification_attempts: number
+          order_id: string
+          special_instructions: string | null
+          updated_at: string
+          verification_attempts: number
+          verification_method: string
+          verification_notes: string | null
+          verification_status: string
+        }
+        Insert: {
+          cod_amount: number
+          cod_fee?: number
+          created_at?: string
+          customer_availability?: Json | null
+          delivery_preference?: string | null
+          id?: string
+          is_high_value?: boolean | null
+          max_verification_attempts?: number
+          order_id: string
+          special_instructions?: string | null
+          updated_at?: string
+          verification_attempts?: number
+          verification_method?: string
+          verification_notes?: string | null
+          verification_status?: string
+        }
+        Update: {
+          cod_amount?: number
+          cod_fee?: number
+          created_at?: string
+          customer_availability?: Json | null
+          delivery_preference?: string | null
+          id?: string
+          is_high_value?: boolean | null
+          max_verification_attempts?: number
+          order_id?: string
+          special_instructions?: string | null
+          updated_at?: string
+          verification_attempts?: number
+          verification_method?: string
+          verification_notes?: string | null
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cod_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cod_payment_collection: {
+        Row: {
+          bank_deposit_reference: string | null
+          cod_order_id: string
+          collected_amount: number
+          collected_at: string | null
+          collected_by: string | null
+          collection_status: string
+          created_at: string
+          delivery_attempt_id: string | null
+          discrepancy_amount: number | null
+          discrepancy_reason: string | null
+          expected_amount: number
+          id: string
+          notes: string | null
+          payment_method: string
+          receipt_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_deposit_reference?: string | null
+          cod_order_id: string
+          collected_amount: number
+          collected_at?: string | null
+          collected_by?: string | null
+          collection_status?: string
+          created_at?: string
+          delivery_attempt_id?: string | null
+          discrepancy_amount?: number | null
+          discrepancy_reason?: string | null
+          expected_amount: number
+          id?: string
+          notes?: string | null
+          payment_method: string
+          receipt_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_deposit_reference?: string | null
+          cod_order_id?: string
+          collected_amount?: number
+          collected_at?: string | null
+          collected_by?: string | null
+          collection_status?: string
+          created_at?: string
+          delivery_attempt_id?: string | null
+          discrepancy_amount?: number | null
+          discrepancy_reason?: string | null
+          expected_amount?: number
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cod_payment_collection_cod_order_id_fkey"
+            columns: ["cod_order_id"]
+            isOneToOne: false
+            referencedRelation: "cod_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cod_payment_collection_delivery_attempt_id_fkey"
+            columns: ["delivery_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "cod_delivery_attempts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cod_verification: {
+        Row: {
+          attempted_at: string
+          attempted_by: string | null
+          cod_order_id: string
+          contact_number: string | null
+          id: string
+          next_attempt_at: string | null
+          notes: string | null
+          response_details: Json | null
+          status: string
+          verification_code: string | null
+          verification_type: string
+        }
+        Insert: {
+          attempted_at?: string
+          attempted_by?: string | null
+          cod_order_id: string
+          contact_number?: string | null
+          id?: string
+          next_attempt_at?: string | null
+          notes?: string | null
+          response_details?: Json | null
+          status: string
+          verification_code?: string | null
+          verification_type: string
+        }
+        Update: {
+          attempted_at?: string
+          attempted_by?: string | null
+          cod_order_id?: string
+          contact_number?: string | null
+          id?: string
+          next_attempt_at?: string | null
+          notes?: string | null
+          response_details?: Json | null
+          status?: string
+          verification_code?: string | null
+          verification_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cod_verification_cod_order_id_fkey"
+            columns: ["cod_order_id"]
+            isOneToOne: false
+            referencedRelation: "cod_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           code: string
