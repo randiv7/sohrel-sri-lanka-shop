@@ -279,6 +279,9 @@ const Admin = () => {
                 <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
                   Manage Users
                 </Button>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/admin-users'}>
+                  Manage Admins
+                </Button>
                 <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/coupons'}>
                   Manage Coupons
                 </Button>
