@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.sales-report-generator]
 verify_jwt = true
+
+[functions.cod-order-processor]
+verify_jwt = false
