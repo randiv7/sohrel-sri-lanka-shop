@@ -29,21 +29,21 @@ const Collections = () => {
     try {
       const { data, error } = await supabase
         .from('categories')
-        .select(`
-          *,
-          products(count)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('display_order');
 
       if (error) {
         console.error('Error fetching categories:', error);
+        setCategories([]);
         return;
       }
 
+      console.log('Categories fetched:', data?.length || 0, 'categories');
       setCategories(data || []);
     } catch (error) {
       console.error('Error:', error);
+      setCategories([]);
     } finally {
       setLoading(false);
     }

@@ -40,6 +40,19 @@ const Shop = () => {
     fetchCategories();
   }, [sortBy, categoryFilter]);
 
+  // Handle URL parameters on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    if (categoryParam) {
+      // Find category by slug and set filter
+      const category = categories.find(c => c.slug === categoryParam);
+      if (category) {
+        setCategoryFilter(category.id);
+      }
+    }
+  }, [categories]);
+
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
@@ -95,9 +108,11 @@ const Shop = () => {
 
       if (error) {
         console.error('Error fetching products:', error);
+        setProducts([]);
         return;
       }
 
+      console.log('Shop products fetched:', data?.length || 0, 'products');
       setProducts(data || []);
     } catch (error) {
       console.error('Error:', error);

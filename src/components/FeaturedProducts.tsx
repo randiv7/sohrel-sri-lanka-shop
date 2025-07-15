@@ -49,10 +49,16 @@ const FeaturedProducts = () => {
         .eq('is_active', true)
         .limit(4);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Featured products fetched:', data);
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching featured products:', error);
+      setProducts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -92,50 +98,31 @@ const FeaturedProducts = () => {
     );
   }
 
-  // Show placeholder products if no featured products exist
-  const placeholderProducts = [
-    {
-      id: 'placeholder-1',
-      name: 'Classic Black Tee',
-      slug: 'classic-black-tee',
-      price: 2500,
-      short_description: 'Essential minimalist black t-shirt',
-      is_featured: true,
-    },
-    {
-      id: 'placeholder-2',
-      name: 'Pure White Essential',
-      slug: 'pure-white-essential',
-      price: 2500,
-      short_description: 'Clean white minimalist design',
-      is_featured: true,
-    },
-    {
-      id: 'placeholder-3',
-      name: 'Oversized Comfort',
-      slug: 'oversized-comfort',
-      price: 2800,
-      short_description: 'Relaxed fit oversized style',
-      is_featured: true,
-    },
-    {
-      id: 'placeholder-4',
-      name: 'Typography Design',
-      slug: 'typography-design',
-      price: 2700,
-      short_description: 'Modern typography artwork',
-      is_featured: true,
-    },
-  ];
-
-  const displayProducts = products.length > 0 ? products : placeholderProducts;
+  // Only show message if no products and not loading
+  if (products.length === 0 && !loading) {
+    return (
+      <section className="section-padding bg-brand-grey-light">
+        <div className="container-sohrel">
+          <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">No featured products available at the moment.</p>
+            <Link to="/shop">
+              <Button className="btn-sohrel-primary mt-4">
+                VIEW ALL PRODUCTS
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section-padding bg-brand-grey-light">
       <div className="container-sohrel">
         <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {displayProducts.map((product) => (
+          {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
