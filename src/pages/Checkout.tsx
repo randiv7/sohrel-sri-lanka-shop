@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useCODCalculator } from "@/hooks/useCODCalculator";
+import CODPaymentOption from "@/components/checkout/CODPaymentOption";
+import CODSpecificFields from "@/components/checkout/CODSpecificFields";
 import { ArrowLeft, CreditCard, Truck } from "lucide-react";
 
 interface CheckoutForm {
@@ -28,6 +31,12 @@ interface CheckoutForm {
   
   // Payment
   payment_method: string;
+  
+  // COD Specific Fields
+  alternatePhone: string;
+  preferredTimeSlot: string;
+  idVerificationConsent: boolean;
+  codDeliveryInstructions: string;
   
   // Order notes
   notes: string;
@@ -59,6 +68,10 @@ const Checkout = () => {
     postal_code: "",
     special_instructions: "",
     payment_method: "cash_on_delivery",
+    alternatePhone: "",
+    preferredTimeSlot: "anytime",
+    idVerificationConsent: false,
+    codDeliveryInstructions: "",
     notes: ""
   });
 
@@ -137,6 +150,9 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      const cartTotal = getCartTotal();
+      const codCalculation = useCODCalculator(cartTotal, form.province);
+
       // Validate required fields
       if (!form.full_name || !form.phone || !form.address_line_1 || !form.city || !form.district || !form.province || !form.postal_code) {
         toast({
@@ -145,6 +161,36 @@ const Checkout = () => {
           variant: "destructive",
         });
         return;
+      }
+
+      // COD specific validations
+      if (form.payment_method === "cash_on_delivery") {
+        if (!form.alternatePhone) {
+          toast({
+            title: "Missing Information",
+            description: "Please provide an alternate phone number for COD orders.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (cartTotal > 10000 && !form.idVerificationConsent) {
+          toast({
+            title: "ID Verification Required",
+            description: "Please consent to ID verification for high-value COD orders.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!codCalculation.isEligible) {
+          toast({
+            title: "COD Not Available",
+            description: codCalculation.message || "Cash on Delivery is not available for this order.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       const shipping_address = {
@@ -156,18 +202,24 @@ const Checkout = () => {
         district: form.district,
         province: form.province,
         postal_code: form.postal_code,
-        special_instructions: form.special_instructions
+        special_instructions: form.special_instructions,
+        // COD specific fields
+        ...(form.payment_method === "cash_on_delivery" && {
+          alternate_phone: form.alternatePhone,
+          preferred_time_slot: form.preferredTimeSlot,
+          cod_delivery_instructions: form.codDeliveryInstructions,
+          id_verification_required: cartTotal > 10000
+        })
       };
 
-      const cartTotal = getCartTotal();
-
       // Create order
+      const totalCODFee = form.payment_method === "cash_on_delivery" ? codCalculation.codFee : 0;
       const orderData = {
         user_id: user?.id || null,
         guest_email: !user ? "guest@example.com" : null, // You might want to collect this
         subtotal: cartTotal,
         shipping_cost: 300, // Fixed shipping for now
-        total_amount: cartTotal + 300,
+        total_amount: cartTotal + 300 + totalCODFee,
         payment_method: form.payment_method,
         shipping_address,
         notes: form.notes,
@@ -290,7 +342,11 @@ const Checkout = () => {
 
   const cartTotal = getCartTotal();
   const shippingCost = 300;
-  const total = cartTotal + shippingCost;
+  
+  // COD calculations
+  const codCalculation = useCODCalculator(cartTotal, form.province);
+  const isCOD = form.payment_method === "cash_on_delivery";
+  const finalTotal = cartTotal + shippingCost + (isCOD ? codCalculation.codFee : 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -442,18 +498,52 @@ const Checkout = () => {
                   Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Select value={form.payment_method} onValueChange={(value) => setForm(prev => ({ ...prev, payment_method: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash_on_delivery">Cash on Delivery</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
+              <CardContent className="space-y-4">
+                {/* Cash on Delivery Option */}
+                <CODPaymentOption
+                  orderValue={cartTotal}
+                  province={form.province}
+                  codFee={codCalculation.codFee}
+                  estimatedDelivery={codCalculation.estimatedDelivery}
+                  isSelected={form.payment_method === "cash_on_delivery"}
+                  onSelect={() => setForm(prev => ({ ...prev, payment_method: "cash_on_delivery" }))}
+                />
+                
+                {/* Other Payment Methods */}
+                <Card 
+                  className={`cursor-pointer transition-all duration-200 ${
+                    form.payment_method === "bank_transfer" 
+                      ? 'border-brand-black bg-brand-grey-light' 
+                      : 'border-brand-border hover:border-muted-foreground'
+                  }`}
+                  onClick={() => setForm(prev => ({ ...prev, payment_method: "bank_transfer" }))}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="w-5 h-5 text-brand-black" />
+                      <div>
+                        <h4 className="font-medium">Bank Transfer</h4>
+                        <p className="text-sm text-muted-foreground">Pay via online banking</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </CardContent>
             </Card>
+
+            {/* COD Specific Fields */}
+            {form.payment_method === "cash_on_delivery" && (
+              <CODSpecificFields
+                fields={{
+                  alternatePhone: form.alternatePhone,
+                  preferredTimeSlot: form.preferredTimeSlot,
+                  idVerificationConsent: form.idVerificationConsent,
+                  codDeliveryInstructions: form.codDeliveryInstructions
+                }}
+                onFieldChange={(field, value) => setForm(prev => ({ ...prev, [field]: value }))}
+                orderValue={cartTotal}
+              />
+            )}
 
             <Card>
               <CardHeader>
@@ -502,9 +592,21 @@ const Checkout = () => {
                     <span>Shipping</span>
                     <span>{formatPrice(shippingCost)}</span>
                   </div>
+                  {isCOD && codCalculation.codFee > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>COD Fee</span>
+                      <span>{formatPrice(codCalculation.codFee)}</span>
+                    </div>
+                  )}
+                  {isCOD && codCalculation.isFreeShipping && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>COD Fee</span>
+                      <span>FREE</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
                     <span>Total</span>
-                    <span>{formatPrice(total)}</span>
+                    <span>{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
 
