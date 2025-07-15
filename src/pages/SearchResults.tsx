@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -27,18 +28,24 @@ interface Product {
   };
 }
 
-const Shop = () => {
+const SearchResults = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [sortBy, setSortBy] = useState("relevance");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, [sortBy, categoryFilter]);
+  }, [searchParams, sortBy, categoryFilter]);
+
+  useEffect(() => {
+    const query = searchParams.get('q') || '';
+    setSearchQuery(query);
+  }, [searchParams]);
 
   const fetchCategories = async () => {
     try {
@@ -62,7 +69,9 @@ const Shop = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      let query = supabase
+      const query = searchParams.get('q') || '';
+      
+      let supabaseQuery = supabase
         .from('products')
         .select(`
           *,
@@ -71,27 +80,38 @@ const Shop = () => {
         `)
         .eq('is_active', true);
 
+      // Apply search filter
+      if (query) {
+        supabaseQuery = supabaseQuery.or(
+          `name.ilike.%${query}%,short_description.ilike.%${query}%,description.ilike.%${query}%`
+        );
+      }
+
       // Apply category filter
       if (categoryFilter !== "all") {
-        query = query.eq('category_id', categoryFilter);
+        supabaseQuery = supabaseQuery.eq('category_id', categoryFilter);
       }
 
       // Apply sorting
       switch (sortBy) {
         case "price-low":
-          query = query.order('price', { ascending: true });
+          supabaseQuery = supabaseQuery.order('price', { ascending: true });
           break;
         case "price-high":
-          query = query.order('price', { ascending: false });
+          supabaseQuery = supabaseQuery.order('price', { ascending: false });
           break;
         case "name":
-          query = query.order('name', { ascending: true });
+          supabaseQuery = supabaseQuery.order('name', { ascending: true });
+          break;
+        case "newest":
+          supabaseQuery = supabaseQuery.order('created_at', { ascending: false });
           break;
         default:
-          query = query.order('created_at', { ascending: false });
+          // Relevance - put featured products first, then by creation date
+          supabaseQuery = supabaseQuery.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
       }
 
-      const { data, error } = await query;
+      const { data, error } = await supabaseQuery;
 
       if (error) {
         console.error('Error fetching products:', error);
@@ -106,23 +126,21 @@ const Shop = () => {
     }
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.short_description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'LKR',
-      minimumFractionDigits: 0,
-    }).format(price);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchParams({ q: searchQuery.trim() });
+    }
   };
 
-  const getProductImage = (product: Product): string => {
-    const primaryImage = product.product_images?.find(img => img.is_primary);
-    return primaryImage?.image_url || '/placeholder.svg';
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchParams({});
+    setCategoryFilter("all");
+    setSortBy("relevance");
   };
+
+  const currentQuery = searchParams.get('q') || '';
 
   if (loading) {
     return (
@@ -145,15 +163,17 @@ const Shop = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Shop All Products</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Discover our complete collection of premium t-shirts designed for style and comfort
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            {currentQuery ? `Search Results for "${currentQuery}"` : "Search Products"}
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            {currentQuery ? `Found ${products.length} products` : "Find what you're looking for"}
           </p>
         </div>
 
         {/* Search and Filters */}
         <div className="flex flex-col lg:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
+          <form onSubmit={handleSearch} className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
@@ -161,7 +181,7 @@ const Shop = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
-          </div>
+          </form>
           
           <div className="flex gap-4">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -185,6 +205,7 @@ const Shop = () => {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="relevance">Most Relevant</SelectItem>
                 <SelectItem value="newest">Newest First</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
@@ -195,33 +216,32 @@ const Shop = () => {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No products found matching your criteria.</p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchQuery("");
-                setCategoryFilter("all");
-                setSortBy("newest");
-              }}
-              className="mt-4"
-            >
-              Clear Filters
-            </Button>
+            <p className="text-muted-foreground text-lg mb-4">
+              {currentQuery ? "No products found matching your search." : "Enter a search term to find products."}
+            </p>
+            {currentQuery && (
+              <Button onClick={clearSearch} variant="outline">
+                Clear Search
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
         {/* Results Count */}
-        <div className="text-center mt-8 text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
-        </div>
+        {products.length > 0 && (
+          <div className="text-center mt-8 text-muted-foreground">
+            Showing {products.length} result{products.length !== 1 ? 's' : ''} 
+            {currentQuery && ` for "${currentQuery}"`}
+          </div>
+        )}
       </main>
 
       <Footer />
@@ -229,4 +249,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default SearchResults;
