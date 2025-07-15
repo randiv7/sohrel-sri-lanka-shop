@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
 
 interface ProductVariant {
@@ -51,6 +52,7 @@ const Product = () => {
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (slug) {
@@ -121,7 +123,7 @@ const Product = () => {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedVariant) {
       toast({
         title: "Please select a size",
@@ -131,11 +133,16 @@ const Product = () => {
       return;
     }
 
-    // In a real app, this would add to cart context/state
-    toast({
-      title: "Added to cart!",
-      description: `${quantity}x ${product?.name} (${selectedVariant.size}) added to cart.`,
-    });
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await addToCart(product.id, selectedVariant.id, quantity);
   };
 
   if (loading) {
