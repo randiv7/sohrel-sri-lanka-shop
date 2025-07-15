@@ -9,6 +9,12 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import Shop from "./pages/Shop";
+import Collections from "./pages/Collections";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Cart from "./pages/Cart";
+import Product from "./pages/Product";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +26,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/product/:slug" element={<Product />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
