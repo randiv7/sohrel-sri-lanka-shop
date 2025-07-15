@@ -145,13 +145,15 @@ const Checkout = () => {
     }
   };
 
+  // Calculate COD fees at component level
+  const cartTotal = getCartTotal();
+  const codCalculation = useCODCalculator(cartTotal, form.province);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const cartTotal = getCartTotal();
-      const codCalculation = useCODCalculator(cartTotal, form.province);
 
       // Validate required fields
       if (!form.full_name || !form.phone || !form.address_line_1 || !form.city || !form.district || !form.province || !form.postal_code) {
@@ -340,11 +342,7 @@ const Checkout = () => {
     }).format(price);
   };
 
-  const cartTotal = getCartTotal();
   const shippingCost = 300;
-  
-  // COD calculations
-  const codCalculation = useCODCalculator(cartTotal, form.province);
   const isCOD = form.payment_method === "cash_on_delivery";
   const finalTotal = cartTotal + shippingCost + (isCOD ? codCalculation.codFee : 0);
 
