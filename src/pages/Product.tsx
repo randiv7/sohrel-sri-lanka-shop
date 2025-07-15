@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
+import RelatedProducts from "@/components/RelatedProducts";
 
 interface ProductVariant {
   id: string;
@@ -39,9 +40,11 @@ interface Product {
   product_images: ProductImage[];
   product_variants: ProductVariant[];
   categories?: {
+    id: string;
     name: string;
     slug: string;
   };
+  category_id?: string;
 }
 
 const Product = () => {
@@ -68,7 +71,7 @@ const Product = () => {
           *,
           product_images(image_url, alt_text, is_primary),
           product_variants(*),
-          categories(name, slug)
+          categories(id, name, slug)
         `)
         .eq('slug', slug)
         .eq('is_active', true)
@@ -352,6 +355,12 @@ const Product = () => {
             </Card>
           </div>
         </div>
+
+        {/* Related Products */}
+        <RelatedProducts 
+          currentProductId={product.id} 
+          categoryId={product.category_id || product.categories?.id} 
+        />
       </main>
 
       <Footer />

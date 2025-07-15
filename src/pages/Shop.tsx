@@ -31,6 +31,7 @@ interface Product {
 
 const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -38,7 +39,27 @@ const Shop = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, [sortBy, categoryFilter]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return;
+      }
+
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -54,7 +75,7 @@ const Shop = () => {
 
       // Apply category filter
       if (categoryFilter !== "all") {
-        query = query.eq('categories.slug', categoryFilter);
+        query = query.eq('category_id', categoryFilter);
       }
 
       // Apply sorting
@@ -152,10 +173,11 @@ const Shop = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="graphic-tees">Graphic Tees</SelectItem>
-                <SelectItem value="minimalist">Minimalist</SelectItem>
-                <SelectItem value="vintage-collection">Vintage Collection</SelectItem>
-                <SelectItem value="plain-essentials">Plain Essentials</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
