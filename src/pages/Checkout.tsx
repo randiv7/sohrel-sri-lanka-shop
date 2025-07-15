@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { ArrowLeft, CreditCard, Truck } from "lucide-react";
 
 interface CheckoutForm {
@@ -41,6 +42,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { trackEvent } = useAnalytics();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
@@ -204,6 +206,46 @@ const Checkout = () => {
         .insert(orderItems);
 
       if (itemsError) throw itemsError;
+
+      // Deduct inventory for ordered items
+      for (const item of cartItems) {
+        if (item.product_variant_id) {
+          try {
+            await supabase.functions.invoke('inventory-monitor', {
+              body: {
+                action: 'deduct_stock',
+                order_items: [{
+                  product_variant_id: item.product_variant_id,
+                  quantity: item.quantity
+                }],
+                order_id: order.id
+              }
+            });
+          } catch (inventoryError) {
+            console.warn('Inventory deduction failed:', inventoryError);
+            // Don't fail the order for inventory issues
+          }
+        }
+      }
+
+      // Track order completion
+      trackEvent({
+        event_type: 'order_completed',
+        event_data: {
+          order_id: order.id,
+          order_number: order.order_number,
+          total_amount: order.total_amount,
+          payment_method: order.payment_method,
+          item_count: cartItems.length,
+          items: cartItems.map(item => ({
+            product_id: item.product_id,
+            product_name: item.product?.name,
+            variant_id: item.product_variant_id,
+            quantity: item.quantity,
+            price: item.product?.sale_price || item.product?.price
+          }))
+        }
+      });
 
       // Save address if user is logged in and it's new
       if (user && !selectedAddress) {

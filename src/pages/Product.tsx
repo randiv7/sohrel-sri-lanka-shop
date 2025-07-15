@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
 import RelatedProducts from "@/components/RelatedProducts";
 
@@ -56,12 +57,29 @@ const Product = () => {
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
   const { addToCart } = useCart();
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     if (slug) {
       fetchProduct();
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (product) {
+      // Track product view
+      trackEvent({
+        event_type: 'product_view',
+        event_data: {
+          product_id: product.id,
+          product_name: product.name,
+          product_slug: product.slug,
+          product_price: product.sale_price || product.price,
+          category_id: product.category_id
+        }
+      });
+    }
+  }, [product, trackEvent]);
 
   const fetchProduct = async () => {
     try {
@@ -146,6 +164,19 @@ const Product = () => {
     }
 
     await addToCart(product.id, selectedVariant.id, quantity);
+    
+    // Track add to cart event
+    trackEvent({
+      event_type: 'add_to_cart',
+      event_data: {
+        product_id: product.id,
+        product_name: product.name,
+        variant_id: selectedVariant.id,
+        variant_size: selectedVariant.size,
+        quantity: quantity,
+        price: selectedVariant.price || product.sale_price || product.price
+      }
+    });
   };
 
   if (loading) {

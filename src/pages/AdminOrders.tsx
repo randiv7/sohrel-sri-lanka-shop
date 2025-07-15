@@ -161,21 +161,31 @@ const AdminOrders = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-          ...(newStatus === 'shipped' && { shipped_at: new Date().toISOString() }),
-          ...(newStatus === 'delivered' && { delivered_at: new Date().toISOString() })
-        })
-        .eq('id', orderId);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to update order status",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('order-status-update', {
+        body: {
+          order_id: orderId,
+          new_status: newStatus,
+          admin_user_id: session.user.id,
+          notes: `Status updated to ${newStatus} by admin`
+        }
+      });
 
       if (error) {
         console.error('Error updating order status:', error);
         toast({
           title: "Error",
-          description: "Failed to update order status",
+          description: error.message || "Failed to update order status",
           variant: "destructive",
         });
         return;
