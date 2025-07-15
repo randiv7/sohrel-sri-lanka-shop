@@ -35,6 +35,7 @@ interface ProductImage {
   file: File;
   preview: string;
   is_primary: boolean;
+  uploaded_url?: string;
 }
 
 const AdminProductNew = () => {
@@ -154,22 +155,74 @@ const AdminProductNew = () => {
     setVariants(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    files.forEach(file => {
+    for (const file of files) {
       if (file.type.startsWith('image/')) {
-        const preview = URL.createObjectURL(file);
-        setImages(prev => [...prev, {
-          file,
-          preview,
-          is_primary: prev.length === 0 // First image is primary by default
-        }]);
+        try {
+          // Generate unique filename
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `products/${fileName}`;
+
+          // Upload to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            toast({
+              title: "Upload Error",
+              description: `Failed to upload ${file.name}`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(filePath);
+
+          // Add to images state
+          setImages(prev => [...prev, {
+            file,
+            preview: publicUrl,
+            is_primary: prev.length === 0, // First image is primary by default
+            uploaded_url: publicUrl
+          }]);
+
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast({
+            title: "Upload Error",
+            description: `Failed to upload ${file.name}`,
+            variant: "destructive",
+          });
+        }
       }
-    });
+    }
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
+    const imageToRemove = images[index];
+    
+    // Delete from storage if it was uploaded
+    if (imageToRemove.uploaded_url) {
+      try {
+        const filePath = imageToRemove.uploaded_url.split('/').pop();
+        if (filePath) {
+          await supabase.storage
+            .from('product-images')
+            .remove([`products/${filePath}`]);
+        }
+      } catch (error) {
+        console.error('Error deleting image from storage:', error);
+      }
+    }
+
     setImages(prev => {
       const newImages = prev.filter((_, i) => i !== index);
       // If we removed the primary image, make the first one primary
@@ -285,23 +338,31 @@ const AdminProductNew = () => {
         return;
       }
 
-      // Upload images (for now we'll use placeholder URLs since we don't have storage set up)
+      // Create product images if any uploaded
       if (images.length > 0) {
-        const imageInsertData = images.map((image, index) => ({
-          product_id: product.id,
-          image_url: `https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&q=80&${index}`, // Placeholder
-          alt_text: `${product.name} - Image ${index + 1}`,
-          is_primary: image.is_primary,
-          display_order: index
-        }));
+        const imageInsertData = images
+          .filter(img => img.uploaded_url) // Only include successfully uploaded images
+          .map((image, index) => ({
+            product_id: product.id,
+            image_url: image.uploaded_url!,
+            alt_text: `${productData.name} - Image ${index + 1}`,
+            is_primary: image.is_primary,
+            display_order: index
+          }));
 
-        const { error: imageError } = await supabase
-          .from('product_images')
-          .insert(imageInsertData);
+        if (imageInsertData.length > 0) {
+          const { error: imageError } = await supabase
+            .from('product_images')
+            .insert(imageInsertData);
 
-        if (imageError) {
-          console.error('Error creating images:', imageError);
-          // Don't fail the whole operation for images
+          if (imageError) {
+            console.error('Error creating images:', imageError);
+            toast({
+              title: "Warning",
+              description: "Product created but some images failed to save",
+              variant: "destructive",
+            });
+          }
         }
       }
 
