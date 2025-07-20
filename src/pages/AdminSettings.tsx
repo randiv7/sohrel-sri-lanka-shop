@@ -88,21 +88,78 @@ const AdminSettings = () => {
         return;
       }
 
-      // Load settings would go here if we had a settings table
-      // For now, we'll use the default values
-      setLoading(false);
+      // Load settings from the database
+      await loadSettings();
     } catch (error) {
       console.error('Error checking admin access:', error);
       navigate('/admin/login');
     }
   };
 
+  const loadSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('key, value');
+
+      if (error) throw error;
+
+      // Convert database format to component state
+      const settingsFromDb: Partial<StoreSettings> = {};
+      data?.forEach(setting => {
+        const key = setting.key as keyof StoreSettings;
+        let value = setting.value;
+        
+        // Parse JSON values
+        if (typeof value === 'string') {
+          try {
+            value = JSON.parse(value);
+          } catch {
+            // Keep as string if not valid JSON
+          }
+        }
+        
+        (settingsFromDb as any)[key] = value;
+      });
+
+      // Merge with defaults
+      setSettings(prev => ({ ...prev, ...settingsFromDb }));
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load store settings.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Here you would save to a store_settings table
-      // For now, we'll just simulate saving
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Prepare settings for database format
+      const updates = Object.entries(settings).map(([key, value]) => ({
+        key,
+        value: JSON.stringify(value),
+        description: getSettingDescription(key)
+      }));
+
+      // Use upsert to insert or update settings
+      for (const setting of updates) {
+        const { error } = await supabase
+          .from('store_settings')
+          .upsert({ 
+            key: setting.key, 
+            value: setting.value,
+            description: setting.description 
+          }, { 
+            onConflict: 'key' 
+          });
+
+        if (error) throw error;
+      }
       
       toast({
         title: "Success",
@@ -118,6 +175,27 @@ const AdminSettings = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const getSettingDescription = (key: string): string => {
+    const descriptions: Record<string, string> = {
+      store_name: 'Store name',
+      store_description: 'Store description',
+      contact_email: 'Contact email',
+      contact_phone: 'Contact phone',
+      address: 'Store address',
+      city: 'Store city',
+      postal_code: 'Postal code',
+      province: 'Province',
+      currency: 'Store currency',
+      tax_rate: 'Tax rate',
+      free_shipping_threshold: 'Free shipping threshold',
+      maintenance_mode: 'Maintenance mode',
+      allow_guest_checkout: 'Allow guest checkout',
+      require_phone_verification: 'Require phone verification',
+      auto_approve_reviews: 'Auto approve reviews'
+    };
+    return descriptions[key] || '';
   };
 
   const handleInputChange = (key: keyof StoreSettings, value: any) => {

@@ -96,23 +96,120 @@ const AdminAnalytics = () => {
         body: Object.fromEntries(params)
       });
 
-      if (error) throw error;
+      if (error) {
+        // If edge function fails, try to generate basic analytics from database
+        console.warn('Edge function failed, generating basic report:', error);
+        await generateBasicReport();
+        return;
+      }
 
       if (data.success) {
         setReport(data.report);
       } else {
-        throw new Error(data.error || 'Failed to generate report');
+        // Fallback to basic report
+        await generateBasicReport();
       }
     } catch (error: any) {
       console.error('Error generating report:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate sales report.",
-        variant: "destructive",
-      });
+      // Fallback to basic report
+      await generateBasicReport();
     } finally {
       setGenerating(false);
       setLoading(false);
+    }
+  };
+
+  const generateBasicReport = async () => {
+    try {
+      // Calculate date range
+      const endDate = dateRange?.to || new Date();
+      const startDate = dateRange?.from || new Date(Date.now() - parseInt(period) * 24 * 60 * 60 * 1000);
+
+      // Fetch orders data
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          total_amount,
+          status,
+          created_at,
+          order_items (
+            quantity,
+            total_price,
+            product_snapshot
+          )
+        `)
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (error) throw error;
+
+      // Generate basic analytics
+      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+      const totalOrders = orders?.length || 0;
+      const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+      // Orders by status
+      const ordersByStatus = orders?.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      // Daily revenue
+      const dailyRevenue = orders?.reduce((acc, order) => {
+        const date = new Date(order.created_at).toISOString().split('T')[0];
+        const existing = acc.find(item => item.date === date);
+        if (existing) {
+          existing.revenue += Number(order.total_amount);
+        } else {
+          acc.push({ date, revenue: Number(order.total_amount) });
+        }
+        return acc;
+      }, [] as Array<{ date: string; revenue: number }>) || [];
+
+      // Top products
+      const productStats: Record<string, { name: string; quantity: number; revenue: number }> = {};
+      orders?.forEach(order => {
+        order.order_items?.forEach(item => {
+          const product = item.product_snapshot as any;
+          const productName = product?.name || 'Unknown Product';
+          if (!productStats[productName]) {
+            productStats[productName] = { name: productName, quantity: 0, revenue: 0 };
+          }
+          productStats[productName].quantity += item.quantity;
+          productStats[productName].revenue += Number(item.total_price);
+        });
+      });
+
+      const topProducts = Object.values(productStats)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10)
+        .map((product, index) => ({
+          ...product,
+          product_id: `product_${index}` // Generate a placeholder ID
+        }));
+
+      const basicReport: SalesReport = {
+        period: `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`,
+        summary: {
+          total_revenue: totalRevenue,
+          total_orders: totalOrders,
+          average_order_value: averageOrderValue
+        },
+        orders_by_status: ordersByStatus,
+        daily_revenue: dailyRevenue.sort((a, b) => a.date.localeCompare(b.date)),
+        top_products: topProducts,
+        generated_at: new Date().toISOString()
+      };
+
+      setReport(basicReport);
+    } catch (error) {
+      console.error('Error generating basic report:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate analytics report.",
+        variant: "destructive",
+      });
     }
   };
 

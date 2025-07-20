@@ -276,10 +276,10 @@ const Admin = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Store Settings
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/manage-users'}>
                   Manage Users
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/admin-users'}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
                   Manage Admins
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/coupons'}>
