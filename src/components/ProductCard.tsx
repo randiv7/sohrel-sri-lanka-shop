@@ -1,9 +1,11 @@
+
 import { Link } from "react-router-dom";
 import { ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useImageWithFallback } from "@/hooks/useImageWithFallback";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -38,14 +40,14 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     }).format(price);
   };
 
-  const getProductImage = (product: Product) => {
+  const getProductImageUrl = (product: Product) => {
     const primaryImage = product.product_images?.find(img => img.is_primary);
-    return primaryImage?.image_url || '/placeholder.svg';
+    return primaryImage?.image_url || product.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = '/placeholder.svg';
-  };
+  const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
+    getProductImageUrl(product)
+  );
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -70,11 +72,19 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     <div className={cn("product-card-sohrel group", className)}>
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product.slug}`}>
+          {imageLoading && (
+            <div className="absolute inset-0 bg-muted animate-pulse" />
+          )}
           <img
-            src={getProductImage(product)}
+            src={imageSrc}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={handleImageError}
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
+              imageLoading && "opacity-0"
+            )}
+            onLoad={onLoad}
+            onError={onError}
+            loading="lazy"
           />
         </Link>
         {product.sale_price && (

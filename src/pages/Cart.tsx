@@ -1,3 +1,4 @@
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useImageWithFallback } from "@/hooks/useImageWithFallback";
+import { cn } from "@/lib/utils";
 
 const Cart = () => {
-  const { cartItems, cartCount, loading, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const { cartItems, cartCount, loading, authInitialized, updateQuantity, removeFromCart, getCartTotal } = useCart();
 
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -28,12 +31,12 @@ const Cart = () => {
     return item.product_variant?.price || item.product?.sale_price || item.product?.price || 0;
   };
 
-  const getItemImage = (item: typeof cartItems[0]) => {
+  const getItemImageUrl = (item: typeof cartItems[0]) => {
     const primaryImage = item.product?.product_images?.find(img => img.is_primary);
     return primaryImage?.image_url || item.product?.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
-  if (loading) {
+  if (!authInitialized || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -92,110 +95,133 @@ const Cart = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cartItems.map((item) => (
-              <Card key={item.id}>
-                <CardContent className="p-6">
-                  <div className="flex gap-4">
+            {cartItems.map((item) => {
+              const CartItemImage = () => {
+                const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
+                  getItemImageUrl(item)
+                );
+
+                return (
+                  <div className="relative w-20 h-20 flex-shrink-0">
+                    {imageLoading && (
+                      <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" />
+                    )}
                     <img
-                      src={getItemImage(item)}
+                      src={imageSrc}
                       alt={item.product?.name || 'Product'}
-                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                      className={cn(
+                        "w-full h-full object-cover rounded-lg",
+                        imageLoading && "opacity-0"
+                      )}
+                      onLoad={onLoad}
+                      onError={onError}
+                      loading="lazy"
                     />
-                    
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <Link 
-                            to={`/product/${item.product?.slug}`}
-                            className="font-semibold text-foreground hover:text-primary transition-colors"
+                  </div>
+                );
+              };
+
+              return (
+                <Card key={item.id}>
+                  <CardContent className="p-6">
+                    <div className="flex gap-4">
+                      <CartItemImage />
+                      
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <Link 
+                              to={`/product/${item.product?.slug}`}
+                              className="font-semibold text-foreground hover:text-primary transition-colors"
+                            >
+                              {item.product?.name || 'Unknown Product'}
+                            </Link>
+                            <div className="flex gap-2 mt-1">
+                              {item.product_variant?.size && (
+                                <Badge variant="outline">{item.product_variant.size}</Badge>
+                              )}
+                              {item.product_variant?.color && (
+                                <Badge variant="outline">{item.product_variant.color}</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-muted-foreground hover:text-destructive"
                           >
-                            {item.product?.name || 'Unknown Product'}
-                          </Link>
-                          <div className="flex gap-2 mt-1">
-                            {item.product_variant?.size && (
-                              <Badge variant="outline">{item.product_variant.size}</Badge>
-                            )}
-                            {item.product_variant?.color && (
-                              <Badge variant="outline">{item.product_variant.color}</Badge>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            {item.product?.sale_price && item.product?.sale_price < item.product?.price ? (
+                              <>
+                                <span className="font-bold text-primary">
+                                  {formatPrice(item.product.sale_price)}
+                                </span>
+                                <span className="text-muted-foreground line-through text-sm">
+                                  {formatPrice(item.product.price)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="font-bold text-foreground">
+                                {formatPrice(getItemPrice(item))}
+                              </span>
                             )}
                           </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
 
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          {item.product?.sale_price && item.product?.sale_price < item.product?.price ? (
-                            <>
-                              <span className="font-bold text-primary">
-                                {formatPrice(item.product.sale_price)}
-                              </span>
-                              <span className="text-muted-foreground line-through text-sm">
-                                {formatPrice(item.product.price)}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="font-bold text-foreground">
-                              {formatPrice(getItemPrice(item))}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1}
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <Input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const newQuantity = parseInt(e.target.value) || 1;
+                                if (newQuantity > 0) {
+                                  updateQuantity(item.id, newQuantity);
+                                }
+                              }}
+                              className="w-16 text-center"
+                              min="1"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={item.product_variant ? item.quantity >= item.product_variant.stock_quantity : false}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <Input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const newQuantity = parseInt(e.target.value) || 1;
-                              if (newQuantity > 0) {
-                                updateQuantity(item.id, newQuantity);
-                              }
-                            }}
-                            className="w-16 text-center"
-                            min="1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.product_variant ? item.quantity >= item.product_variant.stock_quantity : false}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
+                        <div className="mt-2 text-right">
+                          <span className="font-semibold text-foreground">
+                            Total: {formatPrice(getItemTotal(item))}
+                          </span>
                         </div>
+                        
+                        {item.product_variant && (
+                          <div className="mt-1 text-sm text-muted-foreground text-right">
+                            {item.product_variant.stock_quantity} available
+                          </div>
+                        )}
                       </div>
-
-                      <div className="mt-2 text-right">
-                        <span className="font-semibold text-foreground">
-                          Total: {formatPrice(getItemTotal(item))}
-                        </span>
-                      </div>
-                      
-                      {item.product_variant && (
-                        <div className="mt-1 text-sm text-muted-foreground text-right">
-                          {item.product_variant.stock_quantity} available
-                        </div>
-                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Order Summary */}

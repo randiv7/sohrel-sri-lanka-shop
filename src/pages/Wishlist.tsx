@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Trash2, ShoppingCart, Heart } from "lucide-react";
 import Header from "@/components/Header";
@@ -6,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
+import { useImageWithFallback } from "@/hooks/useImageWithFallback";
+import { cn } from "@/lib/utils";
 
 const Wishlist = () => {
-  const { wishlistItems, loading, removeFromWishlist } = useWishlist();
+  const { wishlistItems, loading, authInitialized, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
 
   const formatPrice = (price: number) => {
@@ -19,9 +22,9 @@ const Wishlist = () => {
     }).format(price);
   };
 
-  const getProductImage = (item: any) => {
+  const getProductImageUrl = (item: any) => {
     const primaryImage = item.product?.product_images?.find((img: any) => img.is_primary);
-    return primaryImage?.image_url || '/placeholder.svg';
+    return primaryImage?.image_url || item.product?.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
   const handleAddToCart = async (productId: string) => {
@@ -32,7 +35,7 @@ const Wishlist = () => {
     await removeFromWishlist(productId);
   };
 
-  if (loading) {
+  if (!authInitialized || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -78,15 +81,28 @@ const Wishlist = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wishlistItems.map((item) => (
-              <Card key={item.id} className="group cursor-pointer hover:shadow-lg transition-all duration-300">
-                <CardContent className="p-0">
+            {wishlistItems.map((item) => {
+              const WishlistItemImage = () => {
+                const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
+                  getProductImageUrl(item)
+                );
+
+                return (
                   <div className="relative overflow-hidden rounded-t-lg">
                     <Link to={`/product/${item.product?.slug}`}>
+                      {imageLoading && (
+                        <div className="absolute inset-0 bg-muted animate-pulse" />
+                      )}
                       <img
-                        src={getProductImage(item)}
+                        src={imageSrc}
                         alt={item.product?.name || 'Product'}
-                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                        className={cn(
+                          "w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300",
+                          imageLoading && "opacity-0"
+                        )}
+                        onLoad={onLoad}
+                        onError={onError}
+                        loading="lazy"
                       />
                     </Link>
                     
@@ -101,53 +117,61 @@ const Wishlist = () => {
                       </Button>
                     </div>
                   </div>
-                  
-                  <div className="p-4">
-                    <Link to={`/product/${item.product?.slug}`}>
-                      <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-                        {item.product?.name}
-                      </h3>
-                    </Link>
+                );
+              };
+
+              return (
+                <Card key={item.id} className="group cursor-pointer hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-0">
+                    <WishlistItemImage />
                     
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        {item.product?.sale_price ? (
-                          <>
-                            <span className="font-bold text-primary">
-                              {formatPrice(item.product.sale_price)}
+                    <div className="p-4">
+                      <Link to={`/product/${item.product?.slug}`}>
+                        <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                          {item.product?.name}
+                        </h3>
+                      </Link>
+                      
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          {item.product?.sale_price ? (
+                            <>
+                              <span className="font-bold text-primary">
+                                {formatPrice(item.product.sale_price)}
+                              </span>
+                              <span className="text-muted-foreground line-through text-sm">
+                                {formatPrice(item.product.price)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-bold text-foreground">
+                              {formatPrice(item.product?.price || 0)}
                             </span>
-                            <span className="text-muted-foreground line-through text-sm">
-                              {formatPrice(item.product.price)}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="font-bold text-foreground">
-                            {formatPrice(item.product?.price || 0)}
-                          </span>
-                        )}
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1"
+                          onClick={() => handleAddToCart(item.product_id)}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Add to Cart
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleRemoveFromWishlist(item.product_id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        className="flex-1"
-                        onClick={() => handleAddToCart(item.product_id)}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleRemoveFromWishlist(item.product_id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 

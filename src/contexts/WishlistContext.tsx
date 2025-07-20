@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,6 +25,7 @@ interface WishlistItem {
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
   loading: boolean;
+  authInitialized: boolean;
   isInWishlist: (productId: string) => boolean;
   addToWishlist: (productId: string) => Promise<void>;
   removeFromWishlist: (productId: string) => Promise<void>;
@@ -43,44 +45,75 @@ export const useWishlist = () => {
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  // Track auth state
+  // Track auth state with proper initialization
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Wishlist Auth state change:', event, session?.user?.id);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          refreshWishlist();
-        } else {
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Defer wishlist refresh to prevent race conditions
+          setTimeout(() => {
+            if (mounted) {
+              refreshWishlist();
+            }
+          }, 100);
+        } else if (event === 'SIGNED_OUT') {
+          // Clear wishlist on logout
           setWishlistItems([]);
           setLoading(false);
+        }
+        
+        if (!authInitialized) {
+          setAuthInitialized(true);
         }
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setUser(session?.user ?? null);
-      if (session?.user) {
-        refreshWishlist();
-      } else {
-        setLoading(false);
-      }
+      setAuthInitialized(true);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const refreshWishlist = async () => {
-    if (!user) {
+  // Initial wishlist load after auth is initialized
+  useEffect(() => {
+    if (authInitialized && !refreshing) {
+      if (user) {
+        refreshWishlist();
+      } else {
+        setWishlistItems([]);
+        setLoading(false);
+      }
+    }
+  }, [authInitialized, user]);
+
+  const refreshWishlist = useCallback(async () => {
+    if (!user || refreshing) {
       setWishlistItems([]);
       setLoading(false);
       return;
     }
 
     try {
+      setRefreshing(true);
       setLoading(true);
       
       const { data, error } = await supabase
@@ -130,12 +163,13 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [user, refreshing, toast]);
 
-  const isInWishlist = (productId: string): boolean => {
+  const isInWishlist = useCallback((productId: string): boolean => {
     return wishlistItems.some(item => item.product_id === productId);
-  };
+  }, [wishlistItems]);
 
   const addToWishlist = async (productId: string) => {
     if (!user) {
@@ -224,6 +258,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const value: WishlistContextType = {
     wishlistItems,
     loading,
+    authInitialized,
     isInWishlist,
     addToWishlist,
     removeFromWishlist,

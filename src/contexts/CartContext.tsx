@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +37,7 @@ interface CartContextType {
   cartItems: CartItem[];
   cartCount: number;
   loading: boolean;
+  authInitialized: boolean;
   addToCart: (productId: string, variantId: string | null, quantity?: number) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
@@ -65,39 +66,93 @@ const getSessionId = () => {
   return sessionId;
 };
 
+// Backup cart to sessionStorage
+const backupCartToSession = (items: CartItem[]) => {
+  try {
+    sessionStorage.setItem('cart_backup', JSON.stringify(items));
+  } catch (error) {
+    console.error('Failed to backup cart:', error);
+  }
+};
+
+// Restore cart from sessionStorage
+const restoreCartFromSession = (): CartItem[] => {
+  try {
+    const backup = sessionStorage.getItem('cart_backup');
+    return backup ? JSON.parse(backup) : [];
+  } catch (error) {
+    console.error('Failed to restore cart backup:', error);
+    return [];
+  }
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  // Track auth state
+  // Track auth state with proper initialization
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state change:', event, session?.user?.id);
         setUser(session?.user ?? null);
-        // Refresh cart when auth state changes
-        setTimeout(() => {
-          refreshCart();
-        }, 0);
+        
+        // Don't clear cart immediately on auth change
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Defer cart refresh to prevent race conditions
+          setTimeout(() => {
+            if (mounted) {
+              refreshCart();
+            }
+          }, 100);
+        } else if (event === 'SIGNED_OUT') {
+          // Keep guest cart but refresh to ensure proper session handling
+          setTimeout(() => {
+            if (mounted) {
+              refreshCart();
+            }
+          }, 100);
+        }
+        
+        if (!authInitialized) {
+          setAuthInitialized(true);
+        }
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setUser(session?.user ?? null);
+      setAuthInitialized(true);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Load cart on mount
+  // Initial cart load after auth is initialized
   useEffect(() => {
-    refreshCart();
-  }, []);
+    if (authInitialized && !refreshing) {
+      refreshCart();
+    }
+  }, [authInitialized]);
 
-  const refreshCart = async () => {
+  const refreshCart = useCallback(async () => {
+    if (refreshing) return; // Prevent concurrent refreshes
+    
     try {
+      setRefreshing(true);
       setLoading(true);
       
       let query = supabase
@@ -138,6 +193,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching cart:', error);
+        // Try to restore from backup on error
+        const backup = restoreCartFromSession();
+        if (backup.length > 0) {
+          setCartItems(backup);
+        }
         return;
       }
 
@@ -156,8 +216,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
 
       setCartItems(transformedItems);
+      // Backup to session storage
+      backupCartToSession(transformedItems);
     } catch (error) {
       console.error('Error refreshing cart:', error);
+      // Try to restore from backup on error
+      const backup = restoreCartFromSession();
+      if (backup.length > 0) {
+        setCartItems(backup);
+      }
       toast({
         title: "Error",
         description: "Failed to load cart items",
@@ -165,8 +232,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [user, refreshing, toast]);
 
   const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
     try {
@@ -309,6 +377,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setCartItems([]);
+      // Clear backup as well
+      sessionStorage.removeItem('cart_backup');
     } catch (error) {
       console.error('Error in clearCart:', error);
     }
@@ -327,6 +397,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     cartItems,
     cartCount,
     loading,
+    authInitialized,
     addToCart,
     updateQuantity,
     removeFromCart,

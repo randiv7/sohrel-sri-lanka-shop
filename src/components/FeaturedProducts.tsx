@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -64,19 +65,6 @@ const FeaturedProducts = () => {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-LK', {
-      style: 'currency',
-      currency: 'LKR',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const getProductImage = (product: Product) => {
-    const primaryImage = product.product_images?.find(img => img.is_primary);
-    return primaryImage?.image_url || '/placeholder.svg';
-  };
-
   if (loading) {
     return (
       <section className="section-padding bg-brand-grey-light">
@@ -84,11 +72,11 @@ const FeaturedProducts = () => {
           <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="product-card-sohrel animate-pulse">
-                <div className="aspect-square bg-muted"></div>
+              <div key={i} className="product-card-sohrel">
+                <div className="aspect-square bg-muted animate-pulse rounded-lg"></div>
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-20"></div>
+                  <div className="h-4 bg-muted rounded animate-pulse"></div>
+                  <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
                 </div>
               </div>
             ))}
