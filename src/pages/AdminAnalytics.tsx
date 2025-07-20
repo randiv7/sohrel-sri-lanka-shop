@@ -97,22 +97,27 @@ const AdminAnalytics = () => {
       });
 
       if (error) {
-        // If edge function fails, try to generate basic analytics from database
-        console.warn('Edge function failed, generating basic report:', error);
-        await generateBasicReport();
+        console.error('Edge function failed:', error);
+        toast({
+          title: "Analytics Error",
+          description: "Failed to generate analytics report. Please check your data.",
+          variant: "destructive",
+        });
         return;
       }
 
-      if (data.success) {
+      if (data?.success) {
         setReport(data.report);
       } else {
-        // Fallback to basic report
-        await generateBasicReport();
+        throw new Error('Report generation failed');
       }
     } catch (error: any) {
       console.error('Error generating report:', error);
-      // Fallback to basic report
-      await generateBasicReport();
+      toast({
+        title: "Analytics Error", 
+        description: "Unable to generate analytics. Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setGenerating(false);
       setLoading(false);

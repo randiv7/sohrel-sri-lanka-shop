@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { useImageWithFallback } from "@/hooks/useImageWithFallback";
+import { ProductImage } from "./ProductImage";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -45,10 +45,6 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     return primaryImage?.image_url || product.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
-  const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
-    getProductImageUrl(product)
-  );
-
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -66,25 +62,17 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     }
   };
 
+  const imageUrl = getProductImageUrl(product);
   const inWishlist = isInWishlist(product.id);
 
   return (
     <div className={cn("product-card-sohrel group", className)}>
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product.slug}`}>
-          {imageLoading && (
-            <div className="absolute inset-0 bg-muted animate-pulse" />
-          )}
-          <img
-            src={imageSrc}
+          <ProductImage
+            src={imageUrl}
             alt={product.name}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
-              imageLoading && "opacity-0"
-            )}
-            onLoad={onLoad}
-            onError={onError}
-            loading="lazy"
+            className="transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
         {product.sale_price && (

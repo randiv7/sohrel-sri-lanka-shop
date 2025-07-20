@@ -1,24 +1,24 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { User } from '@supabase/supabase-js';
 
 interface CartItem {
   id: string;
   product_id: string;
-  product_variant_id: string | null;
+  product_variant_id?: string;
   quantity: number;
-  session_id: string | null;
-  user_id: string | null;
-  created_at: string;
-  updated_at: string;
-  // Populated fields
+  user_id?: string;
+  session_id?: string;
   product?: {
     id: string;
     name: string;
     slug: string;
     price: number;
     sale_price?: number;
-    product_images: Array<{
+    short_description?: string;
+    is_featured?: boolean;
+    product_images?: Array<{
       image_url: string;
       alt_text?: string;
       is_primary: boolean;
@@ -29,7 +29,7 @@ interface CartItem {
     size: string;
     color?: string;
     price?: number;
-    stock_quantity: number;
+    stock_quantity?: number;
   };
 }
 
@@ -56,135 +56,124 @@ export const useCart = () => {
   return context;
 };
 
-// Generate a session ID for guest users
-const getSessionId = () => {
-  let sessionId = localStorage.getItem('guest_session_id');
+const generateSessionId = (): string => {
+  return 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+const getSessionId = (): string => {
+  let sessionId = sessionStorage.getItem('cart_session_id');
   if (!sessionId) {
-    sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('guest_session_id', sessionId);
+    sessionId = generateSessionId();
+    sessionStorage.setItem('cart_session_id', sessionId);
   }
   return sessionId;
 };
 
-// Backup cart to sessionStorage
-const backupCartToSession = (items: CartItem[]) => {
-  try {
-    sessionStorage.setItem('cart_backup', JSON.stringify(items));
-  } catch (error) {
-    console.error('Failed to backup cart:', error);
-  }
-};
-
-// Restore cart from sessionStorage
-const restoreCartFromSession = (): CartItem[] => {
-  try {
-    const backup = sessionStorage.getItem('cart_backup');
-    return backup ? JSON.parse(backup) : [];
-  } catch (error) {
-    console.error('Failed to restore cart backup:', error);
-    return [];
-  }
-};
-
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  // Track auth state with proper initialization
-  useEffect(() => {
-    let mounted = true;
+  // Simplified session backup
+  const backupCartToSession = (items: CartItem[]) => {
+    if (!user && items.length > 0) {
+      try {
+        sessionStorage.setItem('cart_backup', JSON.stringify(items));
+      } catch (error) {
+        console.error('Error backing up cart:', error);
+      }
+    }
+  };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Auth state change:', event, session?.user?.id);
-        setUser(session?.user ?? null);
-        
-        // Don't clear cart immediately on auth change
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Defer cart refresh to prevent race conditions
-          setTimeout(() => {
-            if (mounted) {
-              refreshCart();
-            }
-          }, 100);
-        } else if (event === 'SIGNED_OUT') {
-          // Keep guest cart but refresh to ensure proper session handling
-          setTimeout(() => {
-            if (mounted) {
-              refreshCart();
-            }
-          }, 100);
+  const restoreCartFromSession = (): CartItem[] => {
+    if (!user) {
+      try {
+        const backup = sessionStorage.getItem('cart_backup');
+        if (backup) {
+          const parsed = JSON.parse(backup);
+          sessionStorage.removeItem('cart_backup'); // Clear after restoring
+          return Array.isArray(parsed) ? parsed : [];
         }
-        
-        if (!authInitialized) {
-          setAuthInitialized(true);
+      } catch (error) {
+        console.error('Error restoring cart:', error);
+        sessionStorage.removeItem('cart_backup');
+      }
+    }
+    return [];
+  };
+
+  // Simplified auth state handler
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      
+      if (event === 'SIGNED_OUT') {
+        setCartItems([]);
+        sessionStorage.removeItem('cart_backup');
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        // Defer operations to prevent race conditions
+        setTimeout(async () => {
+          const guestCart = restoreCartFromSession();
+          
+          if (guestCart.length > 0) {
+            // Migrate guest cart
+            for (const item of guestCart) {
+              try {
+                await supabase.from('cart_items').insert({
+                  user_id: session.user.id,
+                  product_id: item.product_id,
+                  product_variant_id: item.product_variant_id,
+                  quantity: item.quantity
+                });
+              } catch (error) {
+                console.error('Error migrating cart item:', error);
+              }
+            }
+          }
+          
+          await refreshCart();
+        }, 100);
+      } else if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          setTimeout(() => refreshCart(), 100);
+        } else {
+          const guestCart = restoreCartFromSession();
+          if (guestCart.length > 0) {
+            setCartItems(guestCart);
+          }
         }
       }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      setUser(session?.user ?? null);
+      
       setAuthInitialized(true);
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Initial cart load after auth is initialized
-  useEffect(() => {
-    if (authInitialized && !refreshing) {
-      refreshCart();
-    }
-  }, [authInitialized]);
+  const refreshCart = async () => {
+    if (!authInitialized) return;
 
-  const refreshCart = useCallback(async () => {
-    if (refreshing) return; // Prevent concurrent refreshes
-    
     try {
-      setRefreshing(true);
       setLoading(true);
-      
       let query = supabase
         .from('cart_items')
         .select(`
           *,
-          products (
-            id,
-            name,
-            slug,
-            price,
-            sale_price,
-            product_images (
-              image_url,
-              alt_text,
-              is_primary
-            )
+          product:products!inner (
+            id, name, slug, price, sale_price, short_description, is_featured,
+            product_images (image_url, alt_text, is_primary)
           ),
-          product_variants (
-            id,
-            size,
-            color,
-            price,
-            stock_quantity
+          product_variant:product_variants (
+            id, size, color, price, stock_quantity
           )
         `);
 
       if (user) {
-        // Authenticated user
         query = query.eq('user_id', user.id);
       } else {
-        // Guest user
         const sessionId = getSessionId();
         query = query.eq('session_id', sessionId).is('user_id', null);
       }
@@ -193,97 +182,107 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching cart:', error);
-        // Try to restore from backup on error
-        const backup = restoreCartFromSession();
-        if (backup.length > 0) {
-          setCartItems(backup);
-        }
         return;
       }
 
-      // Transform data to match our interface
-      const transformedItems: CartItem[] = (data || []).map(item => ({
-        ...item,
-        product: item.products ? {
-          id: item.products.id,
-          name: item.products.name,
-          slug: item.products.slug,
-          price: item.products.price,
-          sale_price: item.products.sale_price,
-          product_images: item.products.product_images || []
-        } : undefined,
-        product_variant: item.product_variants || undefined
-      }));
-
-      setCartItems(transformedItems);
-      // Backup to session storage
-      backupCartToSession(transformedItems);
-    } catch (error) {
-      console.error('Error refreshing cart:', error);
-      // Try to restore from backup on error
-      const backup = restoreCartFromSession();
-      if (backup.length > 0) {
-        setCartItems(backup);
+      setCartItems(data || []);
+      
+      // Backup cart for guest users
+      if (!user && data && data.length > 0) {
+        backupCartToSession(data);
       }
-      toast({
-        title: "Error",
-        description: "Failed to load cart items",
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('Error in refreshCart:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, [user, refreshing, toast]);
+  };
 
   const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
     try {
-      // Check if item already exists in cart
-      const existingItem = cartItems.find(item => 
-        item.product_id === productId && item.product_variant_id === variantId
-      );
-
-      if (existingItem) {
-        // Update quantity
-        await updateQuantity(existingItem.id, existingItem.quantity + quantity);
-        return;
-      }
-
-      // Add new item
-      const insertData: any = {
+      const itemData = {
         product_id: productId,
         product_variant_id: variantId,
-        quantity
+        quantity,
+        user_id: user?.id || null,
+        session_id: user ? null : getSessionId()
       };
 
-      if (user) {
-        insertData.user_id = user.id;
-      } else {
-        insertData.session_id = getSessionId();
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('cart_items')
-        .insert([insertData]);
+        .insert(itemData)
+        .select(`
+          *,
+          product:products!inner (
+            id, name, slug, price, sale_price, short_description, is_featured,
+            product_images (image_url, alt_text, is_primary)
+          ),
+          product_variant:product_variants (
+            id, size, color, price, stock_quantity
+          )
+        `);
 
       if (error) {
-        console.error('Error adding to cart:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add item to cart",
-          variant: "destructive",
-        });
-        return;
+        // Check if item already exists and update quantity instead
+        if (error.code === '23505') {
+          // First get the current item
+          let getQuery = supabase
+            .from('cart_items')
+            .select('quantity')
+            .eq('product_id', productId);
+
+          if (variantId) {
+            getQuery = getQuery.eq('product_variant_id', variantId);
+          } else {
+            getQuery = getQuery.is('product_variant_id', null);
+          }
+
+          if (user) {
+            getQuery = getQuery.eq('user_id', user.id);
+          } else {
+            getQuery = getQuery.eq('session_id', getSessionId()).is('user_id', null);
+          }
+
+          const { data: existingItem } = await getQuery.single();
+          
+          if (existingItem) {
+            const newQuantity = existingItem.quantity + quantity;
+            let updateQuery = supabase
+              .from('cart_items')
+              .update({ quantity: newQuantity })
+              .eq('product_id', productId);
+
+            if (variantId) {
+              updateQuery = updateQuery.eq('product_variant_id', variantId);
+            } else {
+              updateQuery = updateQuery.is('product_variant_id', null);
+            }
+
+            if (user) {
+              updateQuery = updateQuery.eq('user_id', user.id);
+            } else {
+              updateQuery = updateQuery.eq('session_id', getSessionId()).is('user_id', null);
+            }
+
+            const { error: updateError } = await updateQuery;
+            
+            if (updateError) {
+              throw updateError;
+            }
+          }
+        } else {
+          throw error;
+        }
       }
 
       await refreshCart();
       
       toast({
-        title: "Added to cart!",
-        description: "Item added to your cart successfully",
+        title: "Added to cart",
+        description: "Item added to your cart successfully.",
       });
     } catch (error) {
-      console.error('Error in addToCart:', error);
+      console.error('Error adding to cart:', error);
       toast({
         title: "Error",
         description: "Failed to add item to cart",
@@ -301,22 +300,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { error } = await supabase
         .from('cart_items')
-        .update({ quantity, updated_at: new Date().toISOString() })
+        .update({ quantity })
         .eq('id', itemId);
 
-      if (error) {
-        console.error('Error updating quantity:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update quantity",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       await refreshCart();
     } catch (error) {
-      console.error('Error in updateQuantity:', error);
+      console.error('Error updating quantity:', error);
       toast({
         title: "Error",
         description: "Failed to update quantity",
@@ -332,24 +323,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .delete()
         .eq('id', itemId);
 
-      if (error) {
-        console.error('Error removing from cart:', error);
-        toast({
-          title: "Error",
-          description: "Failed to remove item from cart",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       await refreshCart();
       
       toast({
         title: "Removed from cart",
-        description: "Item removed from your cart",
+        description: "Item removed from cart successfully.",
       });
     } catch (error) {
-      console.error('Error in removeFromCart:', error);
+      console.error('Error removing from cart:', error);
       toast({
         title: "Error",
         description: "Failed to remove item from cart",
@@ -371,16 +354,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { error } = await query;
 
-      if (error) {
-        console.error('Error clearing cart:', error);
-        return;
-      }
+      if (error) throw error;
 
       setCartItems([]);
-      // Clear backup as well
       sessionStorage.removeItem('cart_backup');
     } catch (error) {
-      console.error('Error in clearCart:', error);
+      console.error('Error clearing cart:', error);
     }
   };
 
@@ -393,21 +372,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
-  const value: CartContextType = {
-    cartItems,
-    cartCount,
-    loading,
-    authInitialized,
-    addToCart,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-    getCartTotal,
-    refreshCart
-  };
-
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider value={{
+      cartItems,
+      cartCount,
+      loading,
+      authInitialized,
+      addToCart,
+      updateQuantity,
+      removeFromCart,
+      clearCart,
+      getCartTotal,
+      refreshCart
+    }}>
       {children}
     </CartContext.Provider>
   );
