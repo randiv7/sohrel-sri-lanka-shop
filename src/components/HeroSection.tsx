@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
 const HeroSection = () => {
-  return (
-    <section className="bg-brand-black text-brand-white section-padding min-h-[80vh] flex items-center">
+  return <section className="bg-brand-black text-brand-white section-padding min-h-[80vh] flex items-center bg-slate-400">
       <div className="container-sohrel">
         <div className="text-center max-w-4xl mx-auto animate-fade-in">
           <h1 className="text-hero mb-6">
@@ -16,17 +14,12 @@ const HeroSection = () => {
             designed for those who appreciate the beauty of simplicity.
           </p>
           <Link to="/shop">
-            <Button 
-              size="lg" 
-              className="btn-sohrel-secondary bg-transparent text-brand-white border-brand-white hover:bg-brand-white hover:text-brand-black"
-            >
+            <Button size="lg" className="btn-sohrel-secondary bg-transparent text-brand-white border-brand-white hover:bg-brand-white hover:text-brand-black">
               SHOP NOW
             </Button>
           </Link>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
