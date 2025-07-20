@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,11 +17,15 @@ import AccountSettings from "./pages/AccountSettings";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminUsers from "./pages/AdminUsers";
+import AdminManageUsers from "./pages/AdminManageUsers";
 import AdminProducts from "./pages/AdminProducts";
 import AdminProductNew from "./pages/AdminProductNew";
 import AdminProductEdit from "./pages/AdminProductEdit";
 import AdminCategories from "./pages/AdminCategories";
 import AdminOrders from "./pages/AdminOrders";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AdminCoupons from "./pages/AdminCoupons";
+import AdminSettings from "./pages/AdminSettings";
 import Shop from "./pages/Shop";
 import Collections from "./pages/Collections";
 import Category from "./pages/Category";
@@ -65,11 +70,15 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/admin-users" element={<AdminUsers />} />
+          <Route path="/admin/users" element={<AdminManageUsers />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/products/new" element={<AdminProductNew />} />
           <Route path="/admin/products/:id/edit" element={<AdminProductEdit />} />
           <Route path="/admin/categories" element={<AdminCategories />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/coupons" element={<AdminCoupons />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>
