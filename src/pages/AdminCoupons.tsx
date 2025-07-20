@@ -100,7 +100,10 @@ const AdminCoupons = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCoupons(data || []);
+      setCoupons(data?.map(coupon => ({
+        ...coupon,
+        type: coupon.type as 'percentage' | 'fixed'
+      })) || []);
     } catch (error) {
       console.error('Error loading coupons:', error);
       toast({
