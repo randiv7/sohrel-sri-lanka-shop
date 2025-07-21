@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,20 +16,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Plus, X, Upload } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload, Loader2 } from "lucide-react";
+import { generateUniqueSlug, validateSlug } from "@/utils/slugUtils";
+import { validateProductForm, formatValidationErrors, type ProductFormData, type ProductVariant } from "@/utils/productValidation";
 
 interface Category {
   id: string;
   name: string;
-}
-
-interface ProductVariant {
-  size: string;
-  color: string;
-  price: number;
-  stock_quantity: number;
-  sku: string;
 }
 
 interface ProductImage {
@@ -40,11 +34,12 @@ interface ProductImage {
 
 const AdminProductNew = () => {
   const [loading, setLoading] = useState(false);
+  const [slugGenerating, setSlugGenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   
   // Product form data
-  const [productData, setProductData] = useState({
+  const [productData, setProductData] = useState<ProductFormData>({
     name: "",
     slug: "",
     description: "",
@@ -64,6 +59,8 @@ const AdminProductNew = () => {
 
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -73,15 +70,29 @@ const AdminProductNew = () => {
     loadCategories();
   }, []);
 
-  // Auto-generate slug from name
+  // Auto-generate slug from name with validation
   useEffect(() => {
-    if (productData.name && !productData.slug) {
-      const slug = productData.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-      setProductData(prev => ({ ...prev, slug }));
-    }
+    const generateSlugFromName = async () => {
+      if (productData.name && !productData.slug) {
+        setSlugGenerating(true);
+        try {
+          const uniqueSlug = await generateUniqueSlug(productData.name);
+          setProductData(prev => ({ ...prev, slug: uniqueSlug }));
+        } catch (error) {
+          console.error('Error generating slug:', error);
+          toast({
+            title: "Slug Generation Error",
+            description: "Could not generate URL slug from product name",
+            variant: "destructive",
+          });
+        } finally {
+          setSlugGenerating(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(generateSlugFromName, 500); // Debounce
+    return () => clearTimeout(timeoutId);
   }, [productData.name]);
 
   const checkAdminAccess = async () => {
@@ -131,8 +142,24 @@ const AdminProductNew = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: keyof ProductFormData, value: string | boolean) => {
     setProductData(prev => ({ ...prev, [field]: value }));
+    
+    // Clear validation errors when user starts typing
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+    }
+  };
+
+  const handleSlugChange = (value: string) => {
+    const validation = validateSlug(value);
+    setProductData(prev => ({ ...prev, slug: value }));
+    
+    if (!validation.isValid && value) {
+      setValidationErrors([validation.error || 'Invalid slug']);
+    } else {
+      setValidationErrors([]);
+    }
   };
 
   const addVariant = () => {
@@ -158,9 +185,24 @@ const AdminProductNew = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
+    if (files.length === 0) return;
+    
+    setUploadingImages(true);
+    
+    // Process images sequentially to avoid race conditions
     for (const file of files) {
       if (file.type.startsWith('image/')) {
         try {
+          // Validate file size (max 5MB)
+          if (file.size > 5 * 1024 * 1024) {
+            toast({
+              title: "File Too Large",
+              description: `${file.name} is too large. Maximum size is 5MB.`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
           // Generate unique filename
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -175,7 +217,7 @@ const AdminProductNew = () => {
             console.error('Upload error:', uploadError);
             toast({
               title: "Upload Error",
-              description: `Failed to upload ${file.name}`,
+              description: `Failed to upload ${file.name}: ${uploadError.message}`,
               variant: "destructive",
             });
             continue;
@@ -204,6 +246,10 @@ const AdminProductNew = () => {
         }
       }
     }
+    
+    setUploadingImages(false);
+    // Reset file input
+    e.target.value = '';
   };
 
   const removeImage = async (index: number) => {
@@ -212,7 +258,8 @@ const AdminProductNew = () => {
     // Delete from storage if it was uploaded
     if (imageToRemove.uploaded_url) {
       try {
-        const filePath = imageToRemove.uploaded_url.split('/').pop();
+        const urlParts = imageToRemove.uploaded_url.split('/');
+        const filePath = urlParts[urlParts.length - 1];
         if (filePath) {
           await supabase.storage
             .from('product-images')
@@ -240,44 +287,36 @@ const AdminProductNew = () => {
     })));
   };
 
-  const validateForm = () => {
-    if (!productData.name.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Product name is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!productData.price || parseFloat(productData.price) <= 0) {
-      toast({
-        title: "Validation Error", 
-        description: "Valid price is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (variants.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "At least one product variant is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    setLoading(true);
+    setValidationErrors([]);
 
     try {
-      setLoading(true);
+      // Validate form
+      const errors = await validateProductForm(productData, variants);
+      if (errors.length > 0) {
+        setValidationErrors([formatValidationErrors(errors)]);
+        toast({
+          title: "Validation Error",
+          description: formatValidationErrors(errors),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate slug one more time before submission
+      const slugValidation = validateSlug(productData.slug);
+      if (!slugValidation.isValid) {
+        setValidationErrors([slugValidation.error || 'Invalid slug']);
+        toast({
+          title: "Validation Error",
+          description: slugValidation.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Create product
       const productInsertData = {
@@ -306,11 +345,35 @@ const AdminProductNew = () => {
 
       if (productError) {
         console.error('Error creating product:', productError);
-        toast({
-          title: "Error",
-          description: "Failed to create product",
-          variant: "destructive",
-        });
+        
+        // Handle specific database errors
+        if (productError.code === '23505') {
+          if (productError.message.includes('slug')) {
+            toast({
+              title: "Duplicate URL Slug",
+              description: "A product with this URL slug already exists. Please use a different slug.",
+              variant: "destructive",
+            });
+          } else if (productError.message.includes('sku')) {
+            toast({
+              title: "Duplicate SKU",
+              description: "A product with this SKU already exists. Please use a different SKU.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Duplicate Data",
+              description: "Some product data already exists. Please check your inputs.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Database Error",
+            description: `Failed to create product: ${productError.message}`,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -330,11 +393,23 @@ const AdminProductNew = () => {
 
       if (variantError) {
         console.error('Error creating variants:', variantError);
-        toast({
-          title: "Error",
-          description: "Failed to create product variants",
-          variant: "destructive",
-        });
+        
+        // Try to clean up the created product
+        await supabase.from('products').delete().eq('id', product.id);
+        
+        if (variantError.code === '23505' && variantError.message.includes('sku')) {
+          toast({
+            title: "Duplicate Variant SKU",
+            description: "One or more variant SKUs already exist. Please use different SKUs.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Variant Error",
+            description: `Failed to create product variants: ${variantError.message}`,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -359,7 +434,7 @@ const AdminProductNew = () => {
             console.error('Error creating images:', imageError);
             toast({
               title: "Warning",
-              description: "Product created but some images failed to save",
+              description: "Product created but some images failed to save. You can add them later.",
               variant: "destructive",
             });
           }
@@ -375,8 +450,8 @@ const AdminProductNew = () => {
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error",
-        description: "Failed to create product",
+        title: "Unexpected Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -407,6 +482,19 @@ const AdminProductNew = () => {
           </div>
         </div>
 
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+          <Card className="mb-6 border-destructive">
+            <CardContent className="pt-6">
+              <div className="text-destructive">
+                {validationErrors.map((error, index) => (
+                  <div key={index} className="whitespace-pre-line">{error}</div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <Card>
@@ -427,12 +515,17 @@ const AdminProductNew = () => {
                 </div>
                 <div>
                   <Label htmlFor="slug">URL Slug</Label>
-                  <Input
-                    id="slug"
-                    value={productData.slug}
-                    onChange={(e) => handleInputChange('slug', e.target.value)}
-                    placeholder="product-url-slug"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="slug"
+                      value={productData.slug}
+                      onChange={(e) => handleSlugChange(e.target.value)}
+                      placeholder="product-url-slug"
+                    />
+                    {slugGenerating && (
+                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 animate-spin" />
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -472,6 +565,8 @@ const AdminProductNew = () => {
                     id="price"
                     type="number"
                     step="0.01"
+                    min="0"
+                    max="999999.99"
                     value={productData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
                     placeholder="0.00"
@@ -484,6 +579,8 @@ const AdminProductNew = () => {
                     id="sale_price"
                     type="number"
                     step="0.01"
+                    min="0"
+                    max="999999.99"
                     value={productData.sale_price}
                     onChange={(e) => handleInputChange('sale_price', e.target.value)}
                     placeholder="0.00"
@@ -496,6 +593,7 @@ const AdminProductNew = () => {
                     value={productData.sku}
                     onChange={(e) => handleInputChange('sku', e.target.value)}
                     placeholder="PRODUCT-SKU"
+                    maxLength={100}
                   />
                 </div>
               </div>
@@ -572,6 +670,7 @@ const AdminProductNew = () => {
                           <Input
                             type="number"
                             step="0.01"
+                            min="0"
                             value={variant.price}
                             onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value) || 0)}
                           />
@@ -580,6 +679,7 @@ const AdminProductNew = () => {
                           <Label>Stock</Label>
                           <Input
                             type="number"
+                            min="0"
                             value={variant.stock_quantity}
                             onChange={(e) => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
                           />
@@ -590,6 +690,7 @@ const AdminProductNew = () => {
                             value={variant.sku}
                             onChange={(e) => updateVariant(index, 'sku', e.target.value)}
                             placeholder="VARIANT-SKU"
+                            maxLength={100}
                           />
                         </div>
                       </div>
@@ -615,10 +716,17 @@ const AdminProductNew = () => {
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
+                    disabled={uploadingImages}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    Upload product images. The first image will be set as primary.
+                    Upload product images (max 5MB each). The first image will be set as primary.
                   </p>
+                  {uploadingImages && (
+                    <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading images...
+                    </div>
+                  )}
                 </div>
 
                 {images.length > 0 && (
@@ -702,8 +810,15 @@ const AdminProductNew = () => {
 
           {/* Submit Buttons */}
           <div className="flex gap-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Product"}
+            <Button type="submit" disabled={loading || uploadingImages || slugGenerating}>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Product"
+              )}
             </Button>
             <Button type="button" variant="outline" onClick={() => navigate('/admin/products')}>
               Cancel
