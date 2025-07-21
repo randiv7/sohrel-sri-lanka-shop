@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRobustWishlist } from '@/hooks/useRobustWishlist';
 
 interface WishlistItem {
   id: string;
@@ -47,29 +48,30 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
+  const { robustWishlistFetch, robustWishlistAdd, robustWishlistRemove } = useRobustWishlist();
 
-  // Track auth state with proper initialization
+  // Debounced auth state tracking
   useEffect(() => {
     let mounted = true;
+    let authTimeout: NodeJS.Timeout;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    const handleAuthChange = (event: string, session: any) => {
+      if (!mounted) return;
+      
+      // Clear any existing timeout
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
+
+      // Debounce auth state changes
+      authTimeout = setTimeout(() => {
         if (!mounted) return;
         
         console.log('Wishlist Auth state change:', event, session?.user?.id);
         setUser(session?.user ?? null);
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Defer wishlist refresh to prevent race conditions
-          setTimeout(() => {
-            if (mounted) {
-              refreshWishlist();
-            }
-          }, 100);
-        } else if (event === 'SIGNED_OUT') {
-          // Clear wishlist on logout
+        if (event === 'SIGNED_OUT') {
           setWishlistItems([]);
           setLoading(false);
         }
@@ -77,8 +79,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (!authInitialized) {
           setAuthInitialized(true);
         }
-      }
-    );
+      }, 100);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,59 +93,36 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => {
       mounted = false;
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
       subscription.unsubscribe();
     };
   }, []);
 
-  // Initial wishlist load after auth is initialized
+  // Load wishlist when auth is ready
   useEffect(() => {
-    if (authInitialized && !refreshing) {
-      if (user) {
-        refreshWishlist();
-      } else {
-        setWishlistItems([]);
-        setLoading(false);
-      }
+    if (authInitialized && user) {
+      refreshWishlist();
+    } else if (authInitialized && !user) {
+      setWishlistItems([]);
+      setLoading(false);
     }
   }, [authInitialized, user]);
 
   const refreshWishlist = useCallback(async () => {
-    if (!user || refreshing) {
+    if (!user) {
       setWishlistItems([]);
       setLoading(false);
       return;
     }
 
     try {
-      setRefreshing(true);
       setLoading(true);
+      const data = await robustWishlistFetch(user.id);
       
-      const { data, error } = await supabase
-        .from('wishlists')
-        .select(`
-          *,
-          products (
-            id,
-            name,
-            slug,
-            price,
-            sale_price,
-            product_images (
-              image_url,
-              alt_text,
-              is_primary
-            )
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching wishlist:', error);
-        return;
-      }
-
       // Transform data to match our interface
-      const transformedItems: WishlistItem[] = (data || []).map(item => ({
+      const transformedItems: WishlistItem[] = data.map(item => ({
         ...item,
         product: item.products ? {
           id: item.products.id,
@@ -156,16 +137,11 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setWishlistItems(transformedItems);
     } catch (error) {
       console.error('Error refreshing wishlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load wishlist items",
-        variant: "destructive",
-      });
+      // Don't show error toast here - the robust hook handles it
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, [user, refreshing, toast]);
+  }, [user, robustWishlistFetch]);
 
   const isInWishlist = useCallback((productId: string): boolean => {
     return wishlistItems.some(item => item.product_id === productId);
@@ -186,23 +162,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     try {
-      const { error } = await supabase
-        .from('wishlists')
-        .insert([{
-          product_id: productId,
-          user_id: user.id
-        }]);
-
-      if (error) {
-        console.error('Error adding to wishlist:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add item to wishlist",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      await robustWishlistAdd(productId, user.id);
       await refreshWishlist();
       
       toast({
@@ -210,12 +170,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         description: "Item added to your wishlist successfully",
       });
     } catch (error) {
+      // Error handling is done in the robust hook
       console.error('Error in addToWishlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add item to wishlist",
-        variant: "destructive",
-      });
     }
   };
 
@@ -223,22 +179,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('wishlists')
-        .delete()
-        .eq('product_id', productId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error removing from wishlist:', error);
-        toast({
-          title: "Error",
-          description: "Failed to remove item from wishlist",
-          variant: "destructive",
-        });
-        return;
-      }
-
+      await robustWishlistRemove(productId, user.id);
       await refreshWishlist();
       
       toast({
@@ -246,12 +187,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         description: "Item removed from your wishlist",
       });
     } catch (error) {
+      // Error handling is done in the robust hook
       console.error('Error in removeFromWishlist:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove item from wishlist",
-        variant: "destructive",
-      });
     }
   };
 
