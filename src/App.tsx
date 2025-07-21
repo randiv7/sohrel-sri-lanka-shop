@@ -45,9 +45,9 @@ const App = () => (
     <TooltipProvider>
       <CartProvider>
         <WishlistProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
+            <Toaster />
+            <Sonner />
             <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/shop" element={<Shop />} />
