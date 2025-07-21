@@ -137,7 +137,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           supabase.from('cart_items')
             .insert(cartInserts)
             .then(() => refreshCart())
-            .catch(err => console.warn('Cart migration failed:', err));
+            .then(() => {}, err => console.warn('Cart migration failed:', err));
         } else {
           refreshCart();
         }

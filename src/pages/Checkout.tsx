@@ -271,7 +271,7 @@ const Checkout = () => {
             is_default: savedAddresses.length === 0
           })
           .then(() => console.log('Address saved'))
-          .catch(err => console.warn('Failed to save address:', err));
+          .then(() => {}, err => console.warn('Failed to save address:', err));
       }
 
       // Clear cart
