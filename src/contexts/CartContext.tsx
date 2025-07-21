@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -76,13 +77,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitialized, setAuthInitialized] = useState(false);
   const { toast } = useToast();
 
-  // Simplified session backup
+  // Optimized session backup - only when needed
   const backupCartToSession = (items: CartItem[]) => {
     if (!user && items.length > 0) {
       try {
-        sessionStorage.setItem('cart_backup', JSON.stringify(items));
+        // Use a more efficient storage method
+        const backup = items.map(item => ({
+          id: item.id,
+          product_id: item.product_id,
+          product_variant_id: item.product_variant_id,
+          quantity: item.quantity
+        }));
+        sessionStorage.setItem('cart_backup', JSON.stringify(backup));
       } catch (error) {
-        console.error('Error backing up cart:', error);
+        console.warn('Cart backup failed:', error);
       }
     }
   };
@@ -93,18 +101,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const backup = sessionStorage.getItem('cart_backup');
         if (backup) {
           const parsed = JSON.parse(backup);
-          sessionStorage.removeItem('cart_backup'); // Clear after restoring
+          sessionStorage.removeItem('cart_backup');
           return Array.isArray(parsed) ? parsed : [];
         }
       } catch (error) {
-        console.error('Error restoring cart:', error);
+        console.warn('Cart restore failed:', error);
         sessionStorage.removeItem('cart_backup');
       }
     }
     return [];
   };
 
-  // Simplified auth state handler
+  // Optimized auth state handler
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const currentUser = session?.user || null;
@@ -114,31 +122,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCartItems([]);
         sessionStorage.removeItem('cart_backup');
       } else if (event === 'SIGNED_IN' && session?.user) {
-        // Defer operations to prevent race conditions
-        setTimeout(async () => {
-          const guestCart = restoreCartFromSession();
-          
-          if (guestCart.length > 0) {
-            // Migrate guest cart
-            for (const item of guestCart) {
-              try {
-                await supabase.from('cart_items').insert({
-                  user_id: session.user.id,
-                  product_id: item.product_id,
-                  product_variant_id: item.product_variant_id,
-                  quantity: item.quantity
-                });
-              } catch (error) {
-                console.error('Error migrating cart item:', error);
-              }
-            }
-          }
-          
-          await refreshCart();
-        }, 100);
+        // Optimized cart migration
+        const guestCart = restoreCartFromSession();
+        
+        if (guestCart.length > 0) {
+          // Bulk insert guest cart items
+          const cartInserts = guestCart.map(item => ({
+            user_id: session.user.id,
+            product_id: item.product_id,
+            product_variant_id: item.product_variant_id,
+            quantity: item.quantity
+          }));
+
+          supabase.from('cart_items')
+            .insert(cartInserts)
+            .then(() => refreshCart())
+            .catch(err => console.warn('Cart migration failed:', err));
+        } else {
+          refreshCart();
+        }
       } else if (event === 'INITIAL_SESSION') {
         if (session?.user) {
-          setTimeout(() => refreshCart(), 100);
+          refreshCart();
         } else {
           const guestCart = restoreCartFromSession();
           if (guestCart.length > 0) {
@@ -187,7 +192,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setCartItems(data || []);
       
-      // Backup cart for guest users
+      // Optimized backup - only for guest users with items
       if (!user && data && data.length > 0) {
         backupCartToSession(data);
       }
@@ -225,7 +230,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         // Check if item already exists and update quantity instead
         if (error.code === '23505') {
-          // First get the current item
+          // Get current item and update quantity
           let getQuery = supabase
             .from('cart_items')
             .select('quantity')

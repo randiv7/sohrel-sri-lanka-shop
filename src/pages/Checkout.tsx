@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
-import { useAnalytics } from "@/hooks/useAnalytics";
+import { useOptimizedAnalytics } from "@/hooks/useOptimizedAnalytics";
 import { useCODCalculator } from "@/hooks/useCODCalculator";
 import CODPaymentOption from "@/components/checkout/CODPaymentOption";
 import CODSpecificFields from "@/components/checkout/CODSpecificFields";
+import { createOrderWithItems, deductInventoryBulk } from "@/services/orderService";
 import { ArrowLeft, CreditCard, Truck } from "lucide-react";
 
 interface CheckoutForm {
@@ -51,8 +52,9 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { cartItems, getCartTotal, clearCart } = useCart();
-  const { trackEvent } = useAnalytics();
+  const { trackEvent } = useOptimizedAnalytics();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
@@ -151,15 +153,22 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (submitting) return;
+    
     setLoading(true);
+    setSubmitting(true);
 
     try {
-
-      // Validate required fields
-      if (!form.full_name || !form.phone || !form.address_line_1 || !form.city || !form.district || !form.province || !form.postal_code) {
+      // Quick client-side validation
+      const requiredFields = ['full_name', 'phone', 'address_line_1', 'city', 'district', 'province', 'postal_code'];
+      const missingFields = requiredFields.filter(field => !form[field as keyof typeof form]);
+      
+      if (missingFields.length > 0) {
         toast({
           title: "Missing Information",
-          description: "Please fill in all required shipping information.",
+          description: `Please fill in: ${missingFields.join(', ')}`,
           variant: "destructive",
         });
         return;
@@ -214,75 +223,26 @@ const Checkout = () => {
         })
       };
 
-      // Create order
+      // Create order with optimized service
       const totalCODFee = form.payment_method === "cash_on_delivery" ? codCalculation.codFee : 0;
       const orderData = {
         user_id: user?.id || null,
-        guest_email: !user ? "guest@example.com" : null, // You might want to collect this
+        guest_email: !user ? "guest@example.com" : null,
         subtotal: cartTotal,
-        shipping_cost: 300, // Fixed shipping for now
+        shipping_cost: 300,
         total_amount: cartTotal + 300 + totalCODFee,
         payment_method: form.payment_method,
         shipping_address,
         notes: form.notes,
-        order_number: `SH${Date.now()}` // Temporary order number
+        order_number: `SH${Date.now()}`
       };
 
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData)
-        .select()
-        .single();
+      const { order } = await createOrderWithItems(orderData, cartItems);
 
-      if (orderError) throw orderError;
+      // Async inventory deduction - don't block order completion
+      deductInventoryBulk(cartItems, order.id);
 
-      // Create order items
-      const orderItems = cartItems.map(item => {
-        const price = item.product?.sale_price || item.product?.price || 0;
-        return {
-          order_id: order.id,
-          product_id: item.product_id,
-          product_variant_id: item.product_variant_id,
-          quantity: item.quantity,
-          unit_price: price,
-          total_price: price * item.quantity,
-          product_snapshot: {
-            name: item.product?.name || 'Unknown Product',
-            size: item.product_variant?.size || 'N/A',
-            color: item.product_variant?.color || 'N/A',
-            image_url: item.product?.product_images?.[0]?.image_url || '/placeholder.svg'
-          }
-        };
-      });
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // Deduct inventory for ordered items
-      for (const item of cartItems) {
-        if (item.product_variant_id) {
-          try {
-            await supabase.functions.invoke('inventory-monitor', {
-              body: {
-                action: 'deduct_stock',
-                order_items: [{
-                  product_variant_id: item.product_variant_id,
-                  quantity: item.quantity
-                }],
-                order_id: order.id
-              }
-            });
-          } catch (inventoryError) {
-            console.warn('Inventory deduction failed:', inventoryError);
-            // Don't fail the order for inventory issues
-          }
-        }
-      }
-
-      // Track order completion
+      // Async analytics tracking - fire and forget
       trackEvent({
         event_type: 'order_completed',
         event_data: {
@@ -301,15 +261,17 @@ const Checkout = () => {
         }
       });
 
-      // Save address if user is logged in and it's new
+      // Save address if user is logged in and it's new (async)
       if (user && !selectedAddress) {
-        await supabase
+        supabase
           .from('customer_addresses')
           .insert({
             user_id: user.id,
             ...shipping_address,
             is_default: savedAddresses.length === 0
-          });
+          })
+          .then(() => console.log('Address saved'))
+          .catch(err => console.warn('Failed to save address:', err));
       }
 
       // Clear cart
@@ -331,6 +293,7 @@ const Checkout = () => {
       });
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -352,7 +315,7 @@ const Checkout = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <Button variant="outline" onClick={() => navigate('/cart')}>
+          <Button variant="outline" onClick={() => navigate('/cart')} disabled={submitting}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Cart
           </Button>
@@ -552,6 +515,7 @@ const Checkout = () => {
                   value={form.notes}
                   onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="Any additional notes for your order..."
+                  disabled={submitting}
                 />
               </CardContent>
             </Card>
@@ -612,9 +576,9 @@ const Checkout = () => {
                   onClick={handleSubmit}
                   className="w-full" 
                   size="lg"
-                  disabled={loading || cartItems.length === 0}
+                  disabled={loading || submitting || cartItems.length === 0}
                 >
-                  {loading ? "Placing Order..." : "Place Order"}
+                  {submitting ? "Processing..." : loading ? "Placing Order..." : "Place Order"}
                 </Button>
               </CardContent>
             </Card>
