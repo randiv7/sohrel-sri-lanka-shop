@@ -1261,6 +1261,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_image_url: {
+        Args: { url: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
