@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { ProductImage } from "./ProductImage";
+
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -69,10 +69,13 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
     <div className={cn("product-card-sohrel group", className)}>
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product.slug}`}>
-          <ProductImage
+          <img
             src={imageUrl}
             alt={product.name}
-            className="transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder.svg';
+            }}
           />
         </Link>
         {product.sale_price && (
