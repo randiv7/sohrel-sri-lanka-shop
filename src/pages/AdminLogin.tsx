@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in as admin
@@ -26,7 +28,7 @@ const AdminLogin = () => {
           .maybeSingle();
         
         if (adminData) {
-          window.location.href = '/admin';
+          navigate('/admin');
         }
       }
     };
@@ -100,7 +102,7 @@ const AdminLogin = () => {
           title: "Success",
           description: "Signed in successfully!",
         });
-        window.location.href = '/admin';
+        navigate('/admin');
       }
     } catch (error: any) {
       toast({
@@ -175,7 +177,7 @@ const AdminLogin = () => {
         <div className="text-center mt-6">
           <Button 
             variant="link" 
-            onClick={() => window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="text-muted-foreground"
           >
             ← Back to Store
