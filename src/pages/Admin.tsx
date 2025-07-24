@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +25,6 @@ const Admin = () => {
     totalRevenue: 0
   });
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkAdminAccess();
@@ -36,7 +34,7 @@ const Admin = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        navigate('/admin/login');
+        window.location.href = '/admin/login';
         return;
       }
 
@@ -60,7 +58,7 @@ const Admin = () => {
           description: "You don't have admin permissions",
           variant: "destructive",
         });
-        navigate('/');
+        window.location.href = '/';
         return;
       }
 
@@ -73,7 +71,7 @@ const Admin = () => {
         description: "Failed to verify admin access",
         variant: "destructive",
       });
-      navigate('/');
+      window.location.href = '/';
     } finally {
       setLoading(false);
     }
@@ -119,7 +117,7 @@ const Admin = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/admin/login');
+      window.location.href = '/admin/login';
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -230,13 +228,13 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button className="w-full" onClick={() => navigate('/admin/products/new')}>
+                <Button className="w-full" onClick={() => window.location.href = '/admin/products/new'}>
                   Add New Product
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/products')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/products'}>
                   Manage Products
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/categories')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/categories'}>
                   Manage Categories
                 </Button>
               </div>
@@ -252,13 +250,13 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button className="w-full" onClick={() => navigate('/admin/orders')}>
+                <Button className="w-full" onClick={() => window.location.href = '/admin/orders'}>
                   View All Orders
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/orders?status=pending')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/orders?status=pending'}>
                   Pending Orders
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/analytics')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/analytics'}>
                   Sales Analytics
                 </Button>
               </div>
@@ -274,17 +272,17 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <Button className="w-full" onClick={() => navigate('/admin/settings')}>
+                <Button className="w-full" onClick={() => window.location.href = '/admin/settings'}>
                   <Settings className="h-4 w-4 mr-2" />
                   Store Settings
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/manage-users')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/manage-users'}>
                   Manage Users
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/users')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
                   Manage Admins
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => navigate('/admin/coupons')}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/coupons'}>
                   Manage Coupons
                 </Button>
               </div>
