@@ -140,37 +140,65 @@ const AdminProducts = () => {
   };
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
-    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId);
+      // First, check if product has order references
+      const { data: orderItems, error: orderError } = await supabase
+        .from('order_items')
+        .select('id, order_id')
+        .eq('product_id', productId)
+        .limit(5);
 
-      if (error) {
-        console.error('Error deleting product:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete product",
-          variant: "destructive",
-        });
-        return;
+      if (orderError) throw orderError;
+
+      const hasOrders = orderItems && orderItems.length > 0;
+      
+      let confirmMessage = `Are you sure you want to delete "${productName}"?`;
+      let actionDescription = "This product will be permanently deleted.";
+      
+      if (hasOrders) {
+        confirmMessage = `"${productName}" is referenced in ${orderItems.length}+ orders. This product will be hidden from customers but order history will be preserved.`;
+        actionDescription = "The product will be deactivated instead of deleted.";
       }
 
-      toast({
-        title: "Product deleted",
-        description: `"${productName}" has been deleted successfully`,
-      });
+      const confirmed = window.confirm(`${confirmMessage}\n\n${actionDescription}`);
+      
+      if (!confirmed) return;
 
+      if (hasOrders) {
+        // Soft delete: set is_active to false
+        const { error } = await supabase
+          .from('products')
+          .update({ is_active: false })
+          .eq('id', productId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product deactivated",
+          description: `${productName} has been hidden from customers but order history is preserved.`,
+        });
+      } else {
+        // Hard delete if no order references
+        const { error } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', productId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Product deleted",
+          description: `${productName} has been deleted successfully.`,
+        });
+      }
+
+      // Reload products
       loadProducts();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error deleting product:', error);
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: "Failed to delete product. Please try again.",
         variant: "destructive",
       });
     }
