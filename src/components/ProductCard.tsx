@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-
+import { ProductImage } from "@/components/ProductImage";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -65,26 +65,15 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   const imageUrl = getProductImageUrl(product);
   const inWishlist = isInWishlist(product.id);
 
-  // Debug logging
-  console.log('ProductCard - Product:', product.name);
-  console.log('ProductCard - Product images:', product.product_images);
-  console.log('ProductCard - Extracted imageUrl:', imageUrl);
-
   return (
     <div className={cn("product-card-sohrel group", className)}>
-      <div className="relative aspect-square overflow-hidden">
-        <Link to={`/product/${product.slug}`}>
-          <img
-            src={imageUrl || '/placeholder.svg'}
+      <div className="relative aspect-square overflow-hidden bg-muted">
+        <Link to={`/product/${product.slug}`} className="block w-full h-full">
+          <ProductImage
+            src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={(e) => {
-              console.log('ProductCard - Image load error for:', imageUrl);
-              e.currentTarget.src = '/placeholder.svg';
-            }}
-            onLoad={() => {
-              console.log('ProductCard - Image loaded successfully:', imageUrl);
-            }}
+            priority={false}
           />
         </Link>
         {product.sale_price && (
