@@ -1,5 +1,6 @@
 
-import { EnhancedImage } from './EnhancedImage';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ProductImageProps {
   src: string | null | undefined;
@@ -16,15 +17,21 @@ export const ProductImage = ({
   fallback = "https://placehold.co/800x800/f3f4f6/6b7280?text=Product+Image",
   priority = false
 }: ProductImageProps) => {
-  // Use the original src first, then fallback to the provided fallback
-  const imageSource = src || fallback;
+  const [currentSrc, setCurrentSrc] = useState(src || fallback);
+
+  const handleError = () => {
+    if (currentSrc !== fallback) {
+      setCurrentSrc(fallback);
+    }
+  };
 
   return (
-    <EnhancedImage
-      src={imageSource}
+    <img
+      src={currentSrc}
       alt={alt}
-      className={className}
-      priority={priority}
+      className={cn("w-full h-full object-cover", className)}
+      loading={priority ? "eager" : "lazy"}
+      onError={handleError}
     />
   );
 };

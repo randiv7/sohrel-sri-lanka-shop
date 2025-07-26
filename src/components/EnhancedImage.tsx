@@ -34,86 +34,45 @@ export const EnhancedImage = ({
   onError
 }: EnhancedImageProps) => {
   const [currentSrc, setCurrentSrc] = useState<string>(src || FALLBACK_URLS[0]);
-  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
 
   const handleLoad = useCallback(() => {
-    setIsLoading(false);
     setHasError(false);
     onLoad?.();
   }, [onLoad]);
 
   const handleError = useCallback(() => {
     console.log('Image failed to load:', currentSrc);
-    setIsLoading(false);
     setHasError(true);
     onError?.();
 
-    // Try retry with same URL first
-    if (retryCount < MAX_RETRIES) {
-      retryTimeoutRef.current = setTimeout(() => {
-        console.log(`Retrying image load (attempt ${retryCount + 1}):`, currentSrc);
-        setRetryCount(prev => prev + 1);
-        setIsLoading(true);
-        setHasError(false);
-        // Force re-render by updating src
-        setCurrentSrc(prev => prev + '?retry=' + (retryCount + 1));
-      }, RETRY_DELAY);
-    } else if (fallbackIndex < FALLBACK_URLS.length - 1) {
-      // Move to next fallback URL
-      const nextIndex = fallbackIndex + 1;
-      console.log('Moving to fallback:', FALLBACK_URLS[nextIndex]);
-      setFallbackIndex(nextIndex);
-      setCurrentSrc(FALLBACK_URLS[nextIndex]);
-      setRetryCount(0);
-      setIsLoading(true);
-      setHasError(false);
+    // Simple fallback - try next URL in the list
+    const currentIndex = FALLBACK_URLS.indexOf(currentSrc);
+    if (currentIndex < FALLBACK_URLS.length - 1) {
+      const nextUrl = FALLBACK_URLS[currentIndex + 1];
+      console.log('Moving to fallback:', nextUrl);
+      setCurrentSrc(nextUrl);
     }
-  }, [currentSrc, retryCount, fallbackIndex, onError]);
+  }, [currentSrc, onError]);
 
   // Update src when prop changes
   useEffect(() => {
-    if (src && src !== currentSrc) {
+    if (src && src !== currentSrc && !hasError) {
       setCurrentSrc(src);
-      setRetryCount(0);
-      setFallbackIndex(0);
-      setIsLoading(true);
       setHasError(false);
     }
-  }, [src, currentSrc]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, []);
+  }, [src, currentSrc, hasError]);
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
-      {isLoading && (
-        <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-      <img
-        src={currentSrc}
-        alt={alt}
-        width={width}
-        height={height}
-        onLoad={handleLoad}
-        onError={handleError}
-        className={cn(
-          "w-full h-full object-cover transition-opacity duration-200",
-          isLoading ? "opacity-0" : "opacity-100"
-        )}
-        loading={priority ? "eager" : "lazy"}
-      />
-    </div>
+    <img
+      src={currentSrc}
+      alt={alt}
+      width={width}
+      height={height}
+      onLoad={handleLoad}
+      onError={handleError}
+      className={cn("w-full h-full object-cover", className)}
+      loading={priority ? "eager" : "lazy"}
+    />
   );
 };

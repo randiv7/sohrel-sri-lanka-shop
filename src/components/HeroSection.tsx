@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 const HeroSection = () => {
-  return <section className="bg-brand-black text-brand-white section-padding min-h-[80vh] flex items-center bg-slate-400">
+  return <section className="bg-brand-black text-brand-white section-padding min-h-[80vh] flex items-center">
       <div className="container-sohrel">
         <div className="text-center max-w-4xl mx-auto animate-fade-in">
           <h1 className="text-hero mb-6">
