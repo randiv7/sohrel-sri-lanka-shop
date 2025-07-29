@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { ProductImage } from "@/components/ProductImage";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -67,13 +67,12 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
 
   return (
     <div className={cn("product-card-sohrel group", className)}>
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product.slug}`} className="block w-full h-full">
-          <ProductImage
+          <OptimizedImage
             src={imageUrl}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            priority={false}
           />
         </Link>
         {product.sale_price && (

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import { useImageWithFallback } from "@/hooks/useImageWithFallback";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { cn } from "@/lib/utils";
 
 const Cart = () => {
@@ -97,25 +97,14 @@ const Cart = () => {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => {
               const CartItemImage = () => {
-                const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
-                  getItemImageUrl(item)
-                );
-
                 return (
                   <div className="relative w-20 h-20 flex-shrink-0">
-                    {imageLoading && (
-                      <div className="absolute inset-0 bg-muted animate-pulse rounded-lg" />
-                    )}
-                    <img
-                      src={imageSrc}
+                    <OptimizedImage
+                      src={getItemImageUrl(item)}
                       alt={item.product?.name || 'Product'}
-                      className={cn(
-                        "w-full h-full object-cover rounded-lg",
-                        imageLoading && "opacity-0"
-                      )}
-                      onLoad={onLoad}
-                      onError={onError}
-                      loading="lazy"
+                      className="w-full h-full object-cover rounded-lg"
+                      width={80}
+                      height={80}
                     />
                   </div>
                 );

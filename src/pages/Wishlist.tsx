@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
-import { useImageWithFallback } from "@/hooks/useImageWithFallback";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { cn } from "@/lib/utils";
 
 const Wishlist = () => {
@@ -83,26 +83,15 @@ const Wishlist = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlistItems.map((item) => {
               const WishlistItemImage = () => {
-                const { src: imageSrc, isLoading: imageLoading, onLoad, onError } = useImageWithFallback(
-                  getProductImageUrl(item)
-                );
-
                 return (
                   <div className="relative overflow-hidden rounded-t-lg">
                     <Link to={`/product/${item.product?.slug}`}>
-                      {imageLoading && (
-                        <div className="absolute inset-0 bg-muted animate-pulse" />
-                      )}
-                      <img
-                        src={imageSrc}
+                      <OptimizedImage
+                        src={getProductImageUrl(item)}
                         alt={item.product?.name || 'Product'}
-                        className={cn(
-                          "w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300",
-                          imageLoading && "opacity-0"
-                        )}
-                        onLoad={onLoad}
-                        onError={onError}
-                        loading="lazy"
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                        width={400}
+                        height={256}
                       />
                     </Link>
                     
