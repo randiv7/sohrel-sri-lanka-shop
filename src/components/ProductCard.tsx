@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { SimpleImage } from "@/components/SimpleImage";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -66,25 +66,25 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   const inWishlist = isInWishlist(product.id);
 
   return (
-    <div className={cn("product-card-sohrel group", className)}>
-      <div className="relative aspect-square overflow-hidden">
+    <div className={cn("bg-white rounded-lg shadow-sm overflow-hidden group", className)}>
+      <div className="relative w-full h-80 overflow-hidden">
         <Link to={`/product/${product.slug}`} className="block w-full h-full">
-          <OptimizedImage
+          <SimpleImage
             src={imageUrl}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </Link>
         {product.sale_price && (
-          <Badge className="absolute top-3 left-3 bg-brand-black text-brand-white">
+          <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
             SALE
           </Badge>
         )}
-        <div className="absolute inset-0 bg-brand-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-2">
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
             <Button 
               size="sm" 
-              className="bg-brand-white text-brand-black hover:bg-brand-black hover:text-brand-white"
+              className="bg-white text-black hover:bg-black hover:text-white"
               onClick={handleAddToCart}
             >
               <ShoppingCart className="h-4 w-4" />
@@ -93,7 +93,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
               size="sm" 
               variant="outline" 
               className={cn(
-                "bg-brand-white border-brand-white hover:bg-brand-black hover:text-brand-white",
+                "bg-white border-white hover:bg-black hover:text-white",
                 inWishlist && "bg-red-500 text-white border-red-500"
               )}
               onClick={handleWishlistToggle}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useCart } from "@/contexts/CartContext";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { SimpleImage } from "@/components/SimpleImage";
 import { cn } from "@/lib/utils";
 
 const Wishlist = () => {
@@ -86,12 +86,10 @@ const Wishlist = () => {
                 return (
                   <div className="relative overflow-hidden rounded-t-lg">
                     <Link to={`/product/${item.product?.slug}`}>
-                      <OptimizedImage
+                      <SimpleImage
                         src={getProductImageUrl(item)}
                         alt={item.product?.name || 'Product'}
                         className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                        width={400}
-                        height={256}
                       />
                     </Link>
                     

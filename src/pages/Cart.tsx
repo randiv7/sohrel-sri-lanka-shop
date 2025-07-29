@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { SimpleImage } from "@/components/SimpleImage";
 import { cn } from "@/lib/utils";
 
 const Cart = () => {
@@ -99,12 +99,10 @@ const Cart = () => {
               const CartItemImage = () => {
                 return (
                   <div className="relative w-20 h-20 flex-shrink-0">
-                    <OptimizedImage
+                    <SimpleImage
                       src={getItemImageUrl(item)}
                       alt={item.product?.name || 'Product'}
                       className="w-full h-full object-cover rounded-lg"
-                      width={80}
-                      height={80}
                     />
                   </div>
                 );
