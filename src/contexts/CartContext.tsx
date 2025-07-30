@@ -57,15 +57,32 @@ export const useCart = () => {
   return context;
 };
 
-const generateSessionId = (): string => {
-  return 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+const generateSessionId = async (): Promise<string> => {
+  // Import security utils dynamically to avoid circular dependencies
+  const { generateSecureSessionId, createGuestSession } = await import('../utils/securityUtils');
+  const secureToken = generateSecureSessionId();
+  
+  // Try to create secure session, fallback to local token
+  try {
+    return await createGuestSession();
+  } catch (error) {
+    console.warn('Using fallback session generation:', error);
+    return secureToken;
+  }
 };
 
-const getSessionId = (): string => {
+const getSessionId = async (): Promise<string> => {
   let sessionId = sessionStorage.getItem('cart_session_id');
   if (!sessionId) {
-    sessionId = generateSessionId();
+    sessionId = await generateSessionId();
     sessionStorage.setItem('cart_session_id', sessionId);
+  } else {
+    // Validate existing session token format
+    const { isValidSessionToken } = await import('../utils/securityUtils');
+    if (!isValidSessionToken(sessionId)) {
+      sessionId = await generateSessionId();
+      sessionStorage.setItem('cart_session_id', sessionId);
+    }
   }
   return sessionId;
 };
@@ -203,7 +220,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        const sessionId = getSessionId();
+        const sessionId = await getSessionId();
         query = query.eq('session_id', sessionId).is('user_id', null);
       }
 
@@ -229,12 +246,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
     try {
+      const sessionId = user ? null : await getSessionId();
       const itemData = {
         product_id: productId,
         product_variant_id: variantId,
         quantity,
         user_id: user?.id || null,
-        session_id: user ? null : getSessionId()
+        session_id: sessionId
       };
 
       const { data, error } = await supabase
@@ -269,7 +287,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (user) {
             getQuery = getQuery.eq('user_id', user.id);
           } else {
-            getQuery = getQuery.eq('session_id', getSessionId()).is('user_id', null);
+            const sessionId = await getSessionId();
+            getQuery = getQuery.eq('session_id', sessionId).is('user_id', null);
           }
 
           const { data: existingItem } = await getQuery.single();
@@ -290,7 +309,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (user) {
               updateQuery = updateQuery.eq('user_id', user.id);
             } else {
-              updateQuery = updateQuery.eq('session_id', getSessionId()).is('user_id', null);
+              const sessionId = await getSessionId();
+              updateQuery = updateQuery.eq('session_id', sessionId).is('user_id', null);
             }
 
             const { error: updateError } = await updateQuery;
@@ -377,7 +397,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        const sessionId = getSessionId();
+        const sessionId = await getSessionId();
         query = query.eq('session_id', sessionId).is('user_id', null);
       }
 
