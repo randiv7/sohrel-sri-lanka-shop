@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { SimpleImage } from "@/components/SimpleImage";
 
 const AboutSection = () => {
   return (
@@ -35,9 +36,9 @@ const AboutSection = () => {
             </Link>
           </div>
           <div className="relative">
-            <div className="aspect-square bg-brand-grey-light overflow-hidden">
-              <img
-                src="/placeholder.svg"
+            <div className="w-full h-96 overflow-hidden">
+              <SimpleImage
+                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop"
                 alt="SOHREL Brand Story"
                 className="w-full h-full object-cover"
               />

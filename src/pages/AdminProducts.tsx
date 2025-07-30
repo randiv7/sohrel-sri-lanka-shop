@@ -152,11 +152,19 @@ const AdminProducts = () => {
 
       if (error) {
         console.error('Error deleting product:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete product",
-          variant: "destructive",
-        });
+        if (error.code === '23503') {
+          toast({
+            title: "Cannot Delete Product",
+            description: "This product cannot be deleted because it has been ordered by customers. You can deactivate it instead.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to delete product. Please try again.",
+            variant: "destructive",
+          });
+        }
         return;
       }
 
