@@ -207,6 +207,70 @@ const AdminOrders = () => {
     }
   };
 
+  const deleteOrder = async (orderId: string, orderStatus: string) => {
+    if (!confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    // Only allow deletion of completed orders
+    if (orderStatus !== 'delivered' && orderStatus !== 'cancelled') {
+      toast({
+        title: "Error",
+        description: "Can only delete delivered or cancelled orders",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // First delete order items (they'll cascade)
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', orderId);
+
+      if (itemsError) {
+        console.error('Error deleting order items:', itemsError);
+        toast({
+          title: "Error",
+          description: "Failed to delete order items",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Then delete the order
+      const { error: orderError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId);
+
+      if (orderError) {
+        console.error('Error deleting order:', orderError);
+        toast({
+          title: "Error",
+          description: "Failed to delete order",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Order deleted",
+        description: "Order has been successfully deleted",
+      });
+
+      loadOrders();
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete order",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('en-LK', {
       style: 'currency',
@@ -543,6 +607,17 @@ const AdminOrders = () => {
                           >
                             Cancel Order
                           </DropdownMenuItem>
+                          {(order.status === 'delivered' || order.status === 'cancelled') && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => deleteOrder(order.id, order.status)}
+                                className="text-red-600 font-semibold"
+                              >
+                                Delete Order
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

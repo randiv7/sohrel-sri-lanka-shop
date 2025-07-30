@@ -14,7 +14,7 @@ const HeroSection = () => {
             designed for those who appreciate the beauty of simplicity.
           </p>
           <Link to="/shop">
-            <Button size="lg" className="btn-sohrel-secondary text-brand-white border-brand-white hover:bg-brand-white hover:text-brand-black text-base bg-zinc-950 hover:bg-zinc-800 text-slate-50">
+            <Button size="lg" className="btn-sohrel-secondary">
               SHOP NOW
             </Button>
           </Link>
