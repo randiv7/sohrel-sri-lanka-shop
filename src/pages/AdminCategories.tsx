@@ -39,14 +39,19 @@ import {
   Edit, 
   Trash2,
   FolderOpen,
-  Tag
+  Tag,
+  Upload,
+  X,
+  Image as ImageIcon
 } from "lucide-react";
+import { SimpleImage } from "@/components/SimpleImage";
 
 interface Category {
   id: string;
   name: string;
   slug: string;
   description?: string;
+  image_url?: string;
   is_active: boolean;
   display_order?: number;
   created_at: string;
@@ -66,9 +71,13 @@ const AdminCategories = () => {
     name: "",
     slug: "",
     description: "",
+    image_url: "",
     is_active: true,
     display_order: 0
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -169,10 +178,13 @@ const AdminCategories = () => {
       name: "",
       slug: "",
       description: "",
+      image_url: "",
       is_active: true,
       display_order: 0
     });
     setEditingCategory(null);
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleCreateCategory = () => {
@@ -185,11 +197,86 @@ const AdminCategories = () => {
       name: category.name,
       slug: category.slug,
       description: category.description || "",
+      image_url: category.image_url || "",
       is_active: category.is_active,
       display_order: category.display_order || 0
     });
     setEditingCategory(category);
+    setImageFile(null);
+    setImagePreview(category.image_url || "");
     setShowCreateDialog(true);
+  };
+
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true);
+      
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `categories/${formData.slug || 'category'}-${Date.now()}.${fileExt}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
+
+      if (error) {
+        console.error('Upload error:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setFormData(prev => ({ ...prev, image_url: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,10 +292,38 @@ const AdminCategories = () => {
     }
 
     try {
+      let imageUrl = formData.image_url;
+      
+      // Upload new image if selected
+      if (imageFile) {
+        const uploadedUrl = await handleImageUpload(imageFile);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+          
+          // Delete old image if updating
+          if (editingCategory?.image_url) {
+            const oldFileName = editingCategory.image_url.split('/').pop();
+            if (oldFileName) {
+              await supabase.storage
+                .from('product-images')
+                .remove([`categories/${oldFileName}`]);
+            }
+          }
+        } else {
+          toast({
+            title: "Upload failed",
+            description: "Failed to upload image. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const categoryData = {
         name: formData.name,
         slug: formData.slug,
         description: formData.description || null,
+        image_url: imageUrl || null,
         is_active: formData.is_active,
         display_order: formData.display_order
       };
@@ -411,7 +526,7 @@ const AdminCategories = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Products</TableHead>
                   <TableHead>Order</TableHead>
@@ -424,13 +539,26 @@ const AdminCategories = () => {
                 {categories.map((category) => (
                   <TableRow key={category.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{category.name}</p>
-                        {category.description && (
-                          <p className="text-sm text-muted-foreground truncate max-w-xs">
-                            {category.description}
-                          </p>
+                      <div className="flex items-center gap-3">
+                        {category.image_url ? (
+                          <SimpleImage
+                            src={category.image_url}
+                            alt={category.name}
+                            className="w-12 h-12 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                          </div>
                         )}
+                        <div>
+                          <p className="font-medium">{category.name}</p>
+                          {category.description && (
+                            <p className="text-sm text-muted-foreground truncate max-w-xs">
+                              {category.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -534,6 +662,56 @@ const AdminCategories = () => {
                   placeholder="Optional category description"
                   rows={3}
                 />
+              </div>
+
+              <div>
+                <Label>Category Image</Label>
+                <div className="space-y-4">
+                  {/* Image Preview */}
+                  {(imagePreview || formData.image_url) && (
+                    <div className="relative w-32 h-32">
+                      <SimpleImage
+                        src={imagePreview || formData.image_url}
+                        alt="Category preview"
+                        className="w-full h-full rounded-lg object-cover border"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                        onClick={removeImage}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* Upload Button */}
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="category-image" className="cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm">
+                          {imagePreview || formData.image_url ? 'Change Image' : 'Upload Image'}
+                        </span>
+                      </div>
+                      <input
+                        id="category-image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    {uploading && (
+                      <div className="text-sm text-muted-foreground">Uploading...</div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Recommended: 400x400px, max 5MB (JPG, PNG, WebP)
+                  </p>
+                </div>
               </div>
 
               <div>
