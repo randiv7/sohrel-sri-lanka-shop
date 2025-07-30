@@ -112,6 +112,40 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return [];
   };
 
+  // Initialize cart loading immediately
+  useEffect(() => {
+    const initializeCart = async () => {
+      // Try to load guest cart from session storage immediately
+      const guestCartBackup = sessionStorage.getItem('cart_backup');
+      if (guestCartBackup) {
+        try {
+          const parsed = JSON.parse(guestCartBackup);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCartItems(parsed);
+          }
+        } catch (error) {
+          console.warn('Failed to restore guest cart:', error);
+          sessionStorage.removeItem('cart_backup');
+        }
+      }
+      
+      // Get initial session to determine if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+      setAuthInitialized(true);
+      
+      // Load cart from database
+      if (session?.user) {
+        await refreshCart();
+      } else {
+        // For guest users, try to load from database with session_id
+        await refreshCart();
+      }
+    };
+
+    initializeCart();
+  }, []);
+
   // Optimized auth state handler
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -121,6 +155,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_OUT') {
         setCartItems([]);
         sessionStorage.removeItem('cart_backup');
+        await refreshCart(); // Load guest cart
       } else if (event === 'SIGNED_IN' && session?.user) {
         // Optimized cart migration
         const guestCart = restoreCartFromSession();
@@ -139,16 +174,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .then(() => refreshCart())
             .then(() => {}, err => console.warn('Cart migration failed:', err));
         } else {
-          refreshCart();
-        }
-      } else if (event === 'INITIAL_SESSION') {
-        if (session?.user) {
-          refreshCart();
-        } else {
-          const guestCart = restoreCartFromSession();
-          if (guestCart.length > 0) {
-            setCartItems(guestCart);
-          }
+          await refreshCart();
         }
       }
       
@@ -159,8 +185,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshCart = async () => {
-    if (!authInitialized) return;
-
     try {
       setLoading(true);
       let query = supabase
