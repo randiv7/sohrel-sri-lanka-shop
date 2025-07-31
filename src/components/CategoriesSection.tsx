@@ -15,6 +15,7 @@ const CategoriesSection = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Immediate fetch without depending on any context
     fetchCategories();
   }, []);
 

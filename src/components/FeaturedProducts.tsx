@@ -25,6 +25,7 @@ const FeaturedProducts = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Immediate fetch without depending on any context
     fetchFeaturedProducts();
   }, []);
 
