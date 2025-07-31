@@ -58,16 +58,20 @@ export const useCart = () => {
 };
 
 const generateSessionId = async (): Promise<string> => {
-  // Import security utils dynamically to avoid circular dependencies
-  const { generateSecureSessionId, createGuestSession } = await import('../utils/securityUtils');
-  const secureToken = generateSecureSessionId();
+  // Fast fallback for immediate session creation
+  const fallbackToken = 'guest_' + crypto.randomUUID();
   
-  // Try to create secure session, fallback to local token
   try {
-    return await createGuestSession();
+    // Try secure session creation with timeout
+    const { createGuestSession } = await import('../utils/securityUtils');
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 2000)
+    );
+    
+    return await Promise.race([createGuestSession(), timeoutPromise]);
   } catch (error) {
     console.warn('Using fallback session generation:', error);
-    return secureToken;
+    return fallbackToken;
   }
 };
 
@@ -76,13 +80,6 @@ const getSessionId = async (): Promise<string> => {
   if (!sessionId) {
     sessionId = await generateSessionId();
     sessionStorage.setItem('cart_session_id', sessionId);
-  } else {
-    // Validate existing session token format
-    const { isValidSessionToken } = await import('../utils/securityUtils');
-    if (!isValidSessionToken(sessionId)) {
-      sessionId = await generateSessionId();
-      sessionStorage.setItem('cart_session_id', sessionId);
-    }
   }
   return sessionId;
 };
@@ -220,14 +217,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        const sessionId = await getSessionId();
-        query = query.eq('session_id', sessionId).is('user_id', null);
+        // Use a more resilient approach for guest sessions
+        try {
+          const sessionId = await getSessionId();
+          query = query.eq('session_id', sessionId).is('user_id', null);
+        } catch (sessionError) {
+          console.warn('Session ID generation failed, using empty cart:', sessionError);
+          setCartItems([]);
+          setLoading(false);
+          return;
+        }
       }
 
       const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching cart:', error);
+        // Don't fail completely, just set empty cart
+        setCartItems([]);
         return;
       }
 
@@ -239,6 +246,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error in refreshCart:', error);
+      // Graceful fallback - don't break the app
+      setCartItems([]);
     } finally {
       setLoading(false);
     }

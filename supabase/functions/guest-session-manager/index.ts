@@ -21,11 +21,21 @@ Deno.serve(async (req) => {
 
     if (action === 'create') {
       // Create a new guest session
+      // Handle complex IP address from multiple proxies
+      const forwardedFor = req.headers.get('x-forwarded-for');
+      let ipAddress = null;
+      
+      if (forwardedFor) {
+        // Take the first IP from comma-separated list
+        const firstIp = forwardedFor.split(',')[0].trim();
+        ipAddress = firstIp;
+      }
+
       const { error } = await supabase
         .from('guest_sessions')
         .insert({
           session_token: token,
-          ip_address: req.headers.get('x-forwarded-for'),
+          ip_address: ipAddress,
           user_agent: req.headers.get('user-agent')
         });
 
