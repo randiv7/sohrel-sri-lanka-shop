@@ -57,28 +57,14 @@ export const useCart = () => {
   return context;
 };
 
-const generateSessionId = async (): Promise<string> => {
-  // Fast fallback for immediate session creation
-  const fallbackToken = 'guest_' + crypto.randomUUID();
-  
-  try {
-    // Try secure session creation with timeout
-    const { createGuestSession } = await import('../utils/securityUtils');
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), 2000)
-    );
-    
-    return await Promise.race([createGuestSession(), timeoutPromise]);
-  } catch (error) {
-    console.warn('Using fallback session generation:', error);
-    return fallbackToken;
-  }
+const generateSessionId = (): string => {
+  return 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 };
 
-const getSessionId = async (): Promise<string> => {
+const getSessionId = (): string => {
   let sessionId = sessionStorage.getItem('cart_session_id');
   if (!sessionId) {
-    sessionId = await generateSessionId();
+    sessionId = generateSessionId();
     sessionStorage.setItem('cart_session_id', sessionId);
   }
   return sessionId;
@@ -88,7 +74,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [authInitialized, setAuthInitialized] = useState(true); // CRITICAL: Start as true to never block UI
+  const [authInitialized, setAuthInitialized] = useState(false);
   const { toast } = useToast();
 
   // Optimized session backup - only when needed
@@ -126,40 +112,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return [];
   };
 
-  // Initialize cart loading immediately
-  useEffect(() => {
-    const initializeCart = async () => {
-      // Try to load guest cart from session storage immediately
-      const guestCartBackup = sessionStorage.getItem('cart_backup');
-      if (guestCartBackup) {
-        try {
-          const parsed = JSON.parse(guestCartBackup);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCartItems(parsed);
-          }
-        } catch (error) {
-          console.warn('Failed to restore guest cart:', error);
-          sessionStorage.removeItem('cart_backup');
-        }
-      }
-      
-      // Get initial session to determine if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      setAuthInitialized(true);
-      
-      // Load cart from database
-      if (session?.user) {
-        await refreshCart();
-      } else {
-        // For guest users, try to load from database with session_id
-        await refreshCart();
-      }
-    };
-
-    initializeCart();
-  }, []);
-
   // Optimized auth state handler
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -169,7 +121,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_OUT') {
         setCartItems([]);
         sessionStorage.removeItem('cart_backup');
-        await refreshCart(); // Load guest cart
       } else if (event === 'SIGNED_IN' && session?.user) {
         // Optimized cart migration
         const guestCart = restoreCartFromSession();
@@ -188,7 +139,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .then(() => refreshCart())
             .then(() => {}, err => console.warn('Cart migration failed:', err));
         } else {
-          await refreshCart();
+          refreshCart();
+        }
+      } else if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          refreshCart();
+        } else {
+          const guestCart = restoreCartFromSession();
+          if (guestCart.length > 0) {
+            setCartItems(guestCart);
+          }
         }
       }
       
@@ -199,6 +159,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const refreshCart = async () => {
+    if (!authInitialized) return;
+
     try {
       setLoading(true);
       let query = supabase
@@ -217,24 +179,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        // Use a more resilient approach for guest sessions
-        try {
-          const sessionId = await getSessionId();
-          query = query.eq('session_id', sessionId).is('user_id', null);
-        } catch (sessionError) {
-          console.warn('Session ID generation failed, using empty cart:', sessionError);
-          setCartItems([]);
-          setLoading(false);
-          return;
-        }
+        const sessionId = getSessionId();
+        query = query.eq('session_id', sessionId).is('user_id', null);
       }
 
       const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching cart:', error);
-        // Don't fail completely, just set empty cart
-        setCartItems([]);
         return;
       }
 
@@ -246,8 +198,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error in refreshCart:', error);
-      // Graceful fallback - don't break the app
-      setCartItems([]);
     } finally {
       setLoading(false);
     }
@@ -255,13 +205,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
     try {
-      const sessionId = user ? null : await getSessionId();
       const itemData = {
         product_id: productId,
         product_variant_id: variantId,
         quantity,
         user_id: user?.id || null,
-        session_id: sessionId
+        session_id: user ? null : getSessionId()
       };
 
       const { data, error } = await supabase
@@ -296,8 +245,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (user) {
             getQuery = getQuery.eq('user_id', user.id);
           } else {
-            const sessionId = await getSessionId();
-            getQuery = getQuery.eq('session_id', sessionId).is('user_id', null);
+            getQuery = getQuery.eq('session_id', getSessionId()).is('user_id', null);
           }
 
           const { data: existingItem } = await getQuery.single();
@@ -318,8 +266,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (user) {
               updateQuery = updateQuery.eq('user_id', user.id);
             } else {
-              const sessionId = await getSessionId();
-              updateQuery = updateQuery.eq('session_id', sessionId).is('user_id', null);
+              updateQuery = updateQuery.eq('session_id', getSessionId()).is('user_id', null);
             }
 
             const { error: updateError } = await updateQuery;
@@ -406,7 +353,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        const sessionId = await getSessionId();
+        const sessionId = getSessionId();
         query = query.eq('session_id', sessionId).is('user_id', null);
       }
 

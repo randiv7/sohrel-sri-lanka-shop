@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_audit_log: {
-        Row: {
-          action: string
-          admin_user_id: string
-          created_at: string
-          details: Json | null
-          id: string
-          ip_address: unknown | null
-          target_user_id: string | null
-          user_agent: string | null
-        }
-        Insert: {
-          action: string
-          admin_user_id: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          target_user_id?: string | null
-          user_agent?: string | null
-        }
-        Update: {
-          action?: string
-          admin_user_id?: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          target_user_id?: string | null
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
       admin_users: {
         Row: {
           created_at: string
@@ -608,36 +575,6 @@ export type Database = {
           special_instructions?: string | null
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      guest_sessions: {
-        Row: {
-          created_at: string
-          expires_at: string
-          id: string
-          ip_address: unknown | null
-          last_activity: string
-          session_token: string
-          user_agent: string | null
-        }
-        Insert: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          ip_address?: unknown | null
-          last_activity?: string
-          session_token: string
-          user_agent?: string | null
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          ip_address?: unknown | null
-          last_activity?: string
-          session_token?: string
-          user_agent?: string | null
         }
         Relationships: []
       }
@@ -1302,10 +1239,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      generate_secure_session_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       has_admin_permission: {
         Args: { permission_key: string; user_uuid?: string }
         Returns: boolean
@@ -1327,18 +1260,6 @@ export type Database = {
           p_notes?: string
         }
         Returns: undefined
-      }
-      update_admin_permissions: {
-        Args: {
-          target_user_id: string
-          new_permissions: Json
-          requesting_user_id?: string
-        }
-        Returns: boolean
-      }
-      validate_guest_session: {
-        Args: { token: string }
-        Returns: boolean
       }
       validate_image_url: {
         Args: { url: string }

@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { SecureFormWrapper } from "@/components/forms/SecureFormWrapper";
-import { validateProductName, validateImageUrl, sanitizeHtml, logAdminAction } from "@/utils/securityUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -284,27 +282,13 @@ const AdminCategories = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Enhanced security validation
-    const nameValidation = validateProductName(formData.name);
-    if (nameValidation) {
+    if (!formData.name.trim()) {
       toast({
         title: "Validation Error",
-        description: nameValidation,
+        description: "Category name is required",
         variant: "destructive",
       });
       return;
-    }
-
-    if (formData.image_url) {
-      const imageValidation = validateImageUrl(formData.image_url);
-      if (imageValidation) {
-        toast({
-          title: "Validation Error",
-          description: imageValidation,
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
     try {
@@ -335,14 +319,13 @@ const AdminCategories = () => {
         }
       }
 
-      // Sanitize input data to prevent XSS
       const categoryData = {
-        name: sanitizeHtml(formData.name.trim()),
-        slug: formData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
-        description: formData.description ? sanitizeHtml(formData.description.trim()) : null,
+        name: formData.name,
+        slug: formData.slug,
+        description: formData.description || null,
         image_url: imageUrl || null,
         is_active: formData.is_active,
-        display_order: Math.max(0, Math.min(999, formData.display_order)) // Clamp to reasonable range
+        display_order: formData.display_order
       };
 
       if (editingCategory) {
@@ -361,12 +344,6 @@ const AdminCategories = () => {
           });
           return;
         }
-
-        // Log admin action
-        await logAdminAction('update_category', { 
-          category_id: editingCategory.id, 
-          category_name: categoryData.name 
-        });
 
         toast({
           title: "Success",
@@ -387,11 +364,6 @@ const AdminCategories = () => {
           });
           return;
         }
-
-        // Log admin action
-        await logAdminAction('create_category', { 
-          category_name: categoryData.name 
-        });
 
         toast({
           title: "Success",
@@ -658,12 +630,7 @@ const AdminCategories = () => {
               </DialogTitle>
             </DialogHeader>
             
-            <SecureFormWrapper 
-              onSubmit={handleSubmit} 
-              formId="category-form"
-              className="space-y-4"
-              maxSubmissions={3}
-            >
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name">Category Name *</Label>
                 <Input
@@ -784,7 +751,7 @@ const AdminCategories = () => {
                   Cancel
                 </Button>
               </div>
-            </SecureFormWrapper>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
