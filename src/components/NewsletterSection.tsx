@@ -32,7 +32,7 @@ const NewsletterSection = () => {
       } else {
         toast({
           title: "Successfully subscribed!",
-          description: "Thank you for joining the SOHREL community.",
+          description: "Welcome to the LIORA community.",
         });
         setEmail("");
       }
@@ -51,14 +51,14 @@ const NewsletterSection = () => {
   return (
     <section className="py-24 md:py-32 bg-black text-white">
       <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 text-center">
-        <div className="mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6 font-heading uppercase">
-            Stay Updated
+        <div className="mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-ultra-wide mb-8 font-heading uppercase">
+            Stay Connected
           </h2>
-          <div className="w-24 h-px bg-white mx-auto mb-8"></div>
+          <div className="divider-minimal mb-10"></div>
           <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-2xl mx-auto">
-            Be the first to know about new collections, exclusive drops, 
-            and special events from SOHREL.
+            Be the first to discover new collections, exclusive releases, 
+            and mindful moments from LIORA.
           </p>
         </div>
         
@@ -82,8 +82,8 @@ const NewsletterSection = () => {
           </div>
         </form>
         
-        <p className="text-xs text-white/60 mt-8 max-w-md mx-auto leading-relaxed">
-          By subscribing, you agree to receive marketing emails from SOHREL. 
+        <p className="text-xs text-white/60 mt-8 max-w-md mx-auto leading-relaxed tracking-wide">
+          By subscribing, you agree to receive thoughtful updates from LIORA. 
           You can unsubscribe at any time.
         </p>
       </div>

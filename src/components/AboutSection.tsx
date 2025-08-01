@@ -10,35 +10,35 @@ const AboutSection = () => {
           {/* Content */}
           <div className="space-y-8 lg:pr-8">
             <div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-black mb-6 font-heading leading-tight">
+              <h2 className="text-section-title text-liora-black mb-8 leading-tight">
                 CRAFTED FOR THE
                 <br />
-                <span className="font-light">CONSCIOUS SOUL</span>
+                <span className="font-light tracking-wide-plus">MINDFUL SOUL</span>
               </h2>
-              <div className="w-16 h-px bg-black mb-8"></div>
+              <div className="divider-section mb-10"></div>
             </div>
             
-            <div className="space-y-6 text-gray-700 leading-relaxed">
-              <p className="text-lg">
-                At SOHREL, we believe that true style lies in simplicity. 
-                Each piece is thoughtfully designed and carefully crafted 
-                to embody the essence of minimalist fashion.
+            <div className="space-y-8 text-liora-grey-dark leading-relaxed">
+              <p className="text-lg md:text-xl">
+                At LIORA, we believe that true elegance emerges from conscious simplicity. 
+                Each piece is meticulously designed and thoughtfully crafted 
+                to embody the essence of modern minimalism.
               </p>
-              <p>
-                Our premium essentials are made from the finest materials, 
-                ensuring comfort that lasts while maintaining the clean, 
-                sophisticated aesthetic that defines modern minimalism.
+              <p className="text-base md:text-lg">
+                Our premium essentials are created from the finest sustainable materials, 
+                ensuring lasting comfort while maintaining the clean, 
+                sophisticated aesthetic that defines contemporary living.
               </p>
-              <p>
-                From concept to creation, every SOHREL piece tells a story 
-                of quality, consciousness, and timeless design that transcends 
-                seasonal trends.
+              <p className="text-base md:text-lg">
+                From concept to creation, every LIORA piece tells a story 
+                of intentional design, mindful craftsmanship, and timeless beauty that transcends 
+                fleeting trends.
               </p>
             </div>
             
-            <div className="pt-4">
+            <div className="pt-6">
               <Link to="/about">
-                <Button className="bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-widest px-10 py-3 h-auto transition-all duration-300">
+                <Button className="btn-liora-primary">
                   DISCOVER OUR STORY
                 </Button>
               </Link>
@@ -50,8 +50,8 @@ const AboutSection = () => {
             <div className="aspect-[4/5] overflow-hidden bg-gray-100 relative">
               <SimpleImage
                 src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop"
-                alt="SOHREL Brand Story"
-                className="w-full h-full object-cover"
+                alt="LIORA Brand Story - Mindful Design"
+                className="w-full h-full object-cover hover-float"
               />
               <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
             </div>

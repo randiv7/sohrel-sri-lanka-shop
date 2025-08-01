@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* SOHREL Brand Colors - Pure B&W Minimalist */
+    /* LIORA Brand Colors - Ultra-Modern Minimalism */
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
     
@@ -19,45 +19,54 @@
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 0 0% 97%;
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 8%;
     
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 40%;
     
-    --accent: 0 0% 96%;
+    --accent: 0 0% 95%;
     --accent-foreground: 0 0% 0%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 0 0% 0%;
     
     --radius: 0rem;
     
-    /* SOHREL Custom Design Tokens */
-    --brand-black: 0 0% 0%;
-    --brand-white: 0 0% 100%;
-    --brand-grey-light: 0 0% 97%;
-    --brand-grey-dark: 0 0% 13%;
-    --brand-border: 0 0% 85%;
+    /* LIORA Custom Design Tokens */
+    --liora-black: 0 0% 0%;
+    --liora-white: 0 0% 100%;
+    --liora-grey-ultra-light: 0 0% 98%;
+    --liora-grey-light: 0 0% 95%;
+    --liora-grey-medium: 0 0% 90%;
+    --liora-grey-dark: 0 0% 10%;
+    --liora-grey-ultra-dark: 0 0% 5%;
     
-    /* Typography Scale */
+    /* Typography Scale - Enhanced */
     --font-heading: 'Montserrat', system-ui, sans-serif;
     --font-body: 'Roboto', system-ui, sans-serif;
     --font-accent: 'Josefin Sans', system-ui, sans-serif;
     
-    /* Shadows & Effects - Minimal */
-    --shadow-minimal: 0 1px 3px 0 hsl(var(--brand-black) / 0.08);
-    --shadow-elevated: 0 4px 12px 0 hsl(var(--brand-black) / 0.1);
-    --shadow-deep: 0 8px 25px 0 hsl(var(--brand-black) / 0.12);
+    /* Advanced Typography Variables */
+    --letter-spacing-ultra-wide: 0.25em;
+    --letter-spacing-wide: 0.15em;
+    --letter-spacing-normal: 0.05em;
     
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Shadows & Effects - Ultra Minimal */
+    --shadow-whisper: 0 1px 2px 0 hsl(var(--liora-black) / 0.04);
+    --shadow-soft: 0 2px 8px 0 hsl(var(--liora-black) / 0.06);
+    --shadow-elevated: 0 4px 16px 0 hsl(var(--liora-black) / 0.08);
+    --shadow-dramatic: 0 8px 32px 0 hsl(var(--liora-black) / 0.12);
+    
+    /* Transitions - Refined */
+    --transition-instant: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 600ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
@@ -120,86 +129,130 @@
 }
 
 @layer components {
-  /* SOHREL Button Variants - Refined */
-  .btn-sohrel-primary {
-    @apply bg-black text-white border border-black px-8 py-3 font-medium uppercase tracking-widest transition-all duration-300 hover:bg-gray-800 focus:ring-2 focus:ring-black focus:ring-offset-2;
+  /* LIORA Button Variants - Ultra Refined */
+  .btn-liora-primary {
+    @apply bg-black text-white border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-350 hover:bg-gray-900 focus:ring-1 focus:ring-black focus:ring-offset-2;
   }
   
-  .btn-sohrel-secondary {
-    @apply bg-transparent text-black border border-black px-8 py-3 font-medium uppercase tracking-widest transition-all duration-300 hover:bg-black hover:text-white focus:ring-2 focus:ring-black focus:ring-offset-2;
+  .btn-liora-secondary {
+    @apply bg-transparent text-black border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-350 hover:bg-black hover:text-white focus:ring-1 focus:ring-black focus:ring-offset-2;
   }
   
-  .btn-sohrel-ghost {
-    @apply bg-transparent text-black border-none px-4 py-2 font-medium uppercase tracking-widest transition-all duration-300 hover:text-gray-600;
+  .btn-liora-ghost {
+    @apply bg-transparent text-black border-none px-6 py-3 font-medium uppercase tracking-[0.15em] transition-all duration-350 hover:text-gray-500;
   }
   
-  /* SOHREL Card Styles - Minimal */
-  .card-sohrel {
-    @apply bg-white border-0 transition-all duration-500 hover:shadow-lg;
+  /* LIORA Card Styles - Ultra Minimal */
+  .card-liora {
+    @apply bg-white border-0 shadow-whisper transition-all duration-500 hover:shadow-soft;
   }
   
-  .product-card-sohrel {
-    @apply bg-white overflow-hidden cursor-pointer transition-all duration-500 hover:shadow-lg;
+  .product-card-liora {
+    @apply bg-white overflow-hidden cursor-pointer transition-all duration-500 hover:shadow-elevated border border-gray-100 hover:border-gray-200;
   }
   
-  /* Typography Utilities - Enhanced */
+  /* Typography Utilities - Ultra Enhanced */
   .text-hero {
-    @apply text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none;
+    @apply text-5xl md:text-7xl lg:text-9xl font-bold leading-none;
     font-family: var(--font-heading);
+    letter-spacing: var(--letter-spacing-normal);
+  }
+  
+  .text-hero-sub {
+    @apply text-xl md:text-2xl lg:text-3xl font-light;
+    font-family: var(--font-heading);
+    letter-spacing: var(--letter-spacing-wide);
   }
   
   .text-subtitle {
-    @apply text-lg md:text-xl text-gray-600;
+    @apply text-lg md:text-xl text-gray-500;
     font-family: var(--font-accent);
+    letter-spacing: var(--letter-spacing-normal);
   }
   
   .text-section-title {
-    @apply text-3xl md:text-4xl font-bold tracking-tight;
+    @apply text-3xl md:text-5xl font-bold;
     font-family: var(--font-heading);
+    letter-spacing: var(--letter-spacing-normal);
+  }
+  
+  .text-brand-signature {
+    @apply text-sm font-medium uppercase;
+    font-family: var(--font-heading);
+    letter-spacing: var(--letter-spacing-ultra-wide);
   }
   
   /* Layout Utilities - Enhanced */
   .section-padding {
-    @apply py-24 md:py-32;
+    @apply py-32 md:py-40;
   }
   
-  .container-sohrel {
-    @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8;
+  .section-padding-sm {
+    @apply py-20 md:py-24;
+  }
+  
+  .container-liora {
+    @apply max-w-7xl mx-auto px-6 md:px-8 lg:px-12;
   }
 }
 
 @layer utilities {
-  /* Custom Utilities */
-  .bg-brand-black {
-    background-color: hsl(var(--brand-black));
+  /* LIORA Brand Utilities */
+  .bg-liora-black {
+    background-color: hsl(var(--liora-black));
   }
   
-  .bg-brand-white {
-    background-color: hsl(var(--brand-white));
+  .bg-liora-white {
+    background-color: hsl(var(--liora-white));
   }
   
-  .bg-brand-grey-light {
-    background-color: hsl(var(--brand-grey-light));
+  .bg-liora-grey-ultra-light {
+    background-color: hsl(var(--liora-grey-ultra-light));
   }
   
-  .text-brand-black {
-    color: hsl(var(--brand-black));
+  .bg-liora-grey-light {
+    background-color: hsl(var(--liora-grey-light));
   }
   
-  .text-brand-white {
-    color: hsl(var(--brand-white));
+  .bg-liora-grey-medium {
+    background-color: hsl(var(--liora-grey-medium));
   }
   
-  .text-brand-grey-dark {
-    color: hsl(var(--brand-grey-dark));
+  .text-liora-black {
+    color: hsl(var(--liora-black));
   }
   
-  .border-brand-black {
-    border-color: hsl(var(--brand-black));
+  .text-liora-white {
+    color: hsl(var(--liora-white));
   }
   
-  .border-brand-border {
-    border-color: hsl(var(--brand-border));
+  .text-liora-grey-dark {
+    color: hsl(var(--liora-grey-dark));
+  }
+  
+  .border-liora-black {
+    border-color: hsl(var(--liora-black));
+  }
+  
+  .border-liora-grey-medium {
+    border-color: hsl(var(--liora-grey-medium));
+  }
+  
+  /* Shadow Utilities */
+  .shadow-whisper {
+    box-shadow: var(--shadow-whisper);
+  }
+  
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  .shadow-dramatic {
+    box-shadow: var(--shadow-dramatic);
   }
   
   /* Animation Classes - Smooth */
@@ -231,18 +284,43 @@
     }
   }
   
-  /* Enhanced hover effects */
+  /* Enhanced Interaction Effects */
   .hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
   }
   
   .hover-lift:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: var(--shadow-elevated);
   }
   
-  /* Text utilities */
-  .tracking-widest-plus {
-    letter-spacing: 0.2em;
+  .hover-float {
+    transition: transform var(--transition-smooth);
+  }
+  
+  .hover-float:hover {
+    transform: translateY(-1px);
+  }
+  
+  /* Advanced Text Utilities */
+  .tracking-ultra-wide {
+    letter-spacing: var(--letter-spacing-ultra-wide);
+  }
+  
+  .tracking-wide-plus {
+    letter-spacing: var(--letter-spacing-wide);
+  }
+  
+  .tracking-normal-plus {
+    letter-spacing: var(--letter-spacing-normal);
+  }
+  
+  /* Minimal Dividers */
+  .divider-minimal {
+    @apply w-16 h-px bg-black mx-auto;
+  }
+  
+  .divider-section {
+    @apply w-24 h-px bg-black;
   }
 }

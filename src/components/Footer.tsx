@@ -30,9 +30,9 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: Instagram, href: "https://instagram.com/sohrel", label: "Instagram" },
-    { icon: Facebook, href: "https://facebook.com/sohrel", label: "Facebook" },
-    { icon: Youtube, href: "https://youtube.com/sohrel", label: "YouTube" },
+    { icon: Instagram, href: "https://instagram.com/liora", label: "Instagram" },
+    { icon: Facebook, href: "https://facebook.com/liora", label: "Facebook" },
+    { icon: Youtube, href: "https://youtube.com/liora", label: "YouTube" },
   ];
 
   const paymentMethods = [
@@ -52,11 +52,11 @@ const Footer = () => {
             {/* Brand Section */}
             <div className="space-y-6">
               <Link to="/" className="inline-block">
-                <h2 className="text-2xl lg:text-3xl font-bold font-heading tracking-tight">SOHREL</h2>
+                <h2 className="text-2xl lg:text-3xl font-bold font-heading tracking-ultra-wide">LIORA</h2>
               </Link>
               <p className="text-gray-300 leading-relaxed max-w-sm">
-                Premium minimalist essentials crafted for the modern soul. 
-                Discover the beauty of simplicity.
+                Premium minimalist essentials crafted for the mindful soul. 
+                Discover the beauty of conscious simplicity.
               </p>
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Company</h3>
@@ -124,8 +124,8 @@ const Footer = () => {
                 </div>
                 <div className="flex items-center space-x-3 text-sm">
                   <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <a href="mailto:hello@sohrel.lk" className="text-gray-300 hover:text-white transition-colors">
-                    hello@sohrel.lk
+                  <a href="mailto:hello@liora.lk" className="text-gray-300 hover:text-white transition-colors">
+                    hello@liora.lk
                   </a>
                 </div>
               </div>
@@ -157,8 +157,8 @@ const Footer = () => {
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
             
             {/* Copyright */}
-            <div className="text-sm text-gray-400 text-center lg:text-left">
-              © {currentYear} SOHREL. All rights reserved.
+            <div className="text-sm text-gray-400 text-center lg:text-left tracking-wide-plus">
+              © {currentYear} LIORA. All rights reserved.
             </div>
             
             {/* Payment Methods */}
