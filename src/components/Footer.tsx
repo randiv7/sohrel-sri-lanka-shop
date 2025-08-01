@@ -4,32 +4,30 @@ import { Instagram, Facebook, Youtube, Mail, Phone, MapPin } from "lucide-react"
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
-  const footerLinks = {
-    shop: [
-      { name: "All Products", href: "/shop" },
-      { name: "New Arrivals", href: "/shop?filter=new" },
-      { name: "Best Sellers", href: "/shop?filter=bestsellers" },
-      { name: "Sale", href: "/shop?filter=sale" },
-    ],
-    collections: [
-      { name: "Graphic Tees", href: "/category/graphic-tees" },
-      { name: "Minimalist", href: "/category/minimalist" },
-      { name: "Typography", href: "/category/typography" },
-      { name: "Oversized", href: "/category/oversized" },
-    ],
-    help: [
-      { name: "Size Guide", href: "/size-guide" },
-      { name: "Shipping Info", href: "/shipping" },
-      { name: "Returns", href: "/returns" },
-      { name: "FAQ", href: "/faq" },
-    ],
-    company: [
-      { name: "About Us", href: "/about" },
-      { name: "Contact", href: "/contact" },
-      { name: "Privacy Policy", href: "/privacy" },
-      { name: "Terms of Service", href: "/terms" },
-    ],
-  };
+  const quickLinks = [
+    { name: "All Products", href: "/shop" },
+    { name: "New Arrivals", href: "/shop?filter=new" },
+    { name: "Best Sellers", href: "/shop?filter=bestsellers" },
+    { name: "Graphic Tees", href: "/category/graphic-tees" },
+    { name: "Minimalist", href: "/category/minimalist" },
+    { name: "Sale", href: "/shop?filter=sale" },
+  ];
+
+  const supportLinks = [
+    { name: "Size Guide", href: "/size-guide" },
+    { name: "Shipping Info", href: "/shipping" },
+    { name: "Returns & Exchanges", href: "/returns" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Contact Us", href: "/contact" },
+    { name: "Track Your Order", href: "/orders" },
+  ];
+
+  const companyLinks = [
+    { name: "About Us", href: "/about" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
+    { name: "Careers", href: "/careers" },
+  ];
 
   const socialLinks = [
     { icon: Instagram, href: "https://instagram.com/sohrel", label: "Instagram" },
@@ -38,141 +36,142 @@ const Footer = () => {
   ];
 
   const paymentMethods = [
-    "PayHere",
-    "Visa",
-    "Mastercard",
-    "American Express",
+    { name: "PayHere", logo: "💳" },
+    { name: "Visa", logo: "💳" },
+    { name: "Mastercard", logo: "💳" },
+    { name: "American Express", logo: "💳" },
   ];
 
   return (
-    <footer className="bg-brand-black text-brand-white">
-      <div className="container-sohrel">
+    <footer className="bg-black text-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Brand Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <Link to="/" className="inline-block">
-              <h2 className="text-2xl font-bold font-heading">SOHREL</h2>
-            </Link>
-            <p className="text-brand-white/80 max-w-md">
-              Premium minimalist t-shirts crafted for the modern soul. 
-              Discover the beauty of simplicity with SOHREL.
-            </p>
+        <div className="py-16 lg:py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             
-            {/* Contact Info */}
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-3">
-                <MapPin className="h-4 w-4 text-brand-white/60" />
-                <span>Colombo, Sri Lanka</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-brand-white/60" />
-                <span>+94 77 123 4567</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-brand-white/60" />
-                <span>hello@sohrel.lk</span>
+            {/* Brand Section */}
+            <div className="space-y-6">
+              <Link to="/" className="inline-block">
+                <h2 className="text-2xl lg:text-3xl font-bold font-heading tracking-tight">SOHREL</h2>
+              </Link>
+              <p className="text-gray-300 leading-relaxed max-w-sm">
+                Premium minimalist essentials crafted for the modern soul. 
+                Discover the beauty of simplicity.
+              </p>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Company</h3>
+                <div className="space-y-2">
+                  {companyLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      to={link.href}
+                      className="block text-sm text-gray-300 hover:text-white transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Social Links */}
-            <div className="flex space-x-4">
-              {socialLinks.map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 border border-brand-white/20 hover:border-brand-white/40 transition-colors"
-                  aria-label={label}
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              ))}
+            {/* Quick Links */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Shop</h3>
+              <div className="space-y-2">
+                {quickLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="block text-sm text-gray-300 hover:text-white transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Footer Links */}
-          <div>
-            <h3 className="font-semibold mb-4 uppercase tracking-wider">Shop</h3>
-            <ul className="space-y-2">
-              {footerLinks.shop.map((link) => (
-                <li key={link.name}>
+            {/* Support Links */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Support</h3>
+              <div className="space-y-2">
+                {supportLinks.map((link) => (
                   <Link
+                    key={link.name}
                     to={link.href}
-                    className="text-brand-white/80 hover:text-brand-white transition-colors text-sm"
+                    className="block text-sm text-gray-300 hover:text-white transition-colors"
                   >
                     {link.name}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+                ))}
+              </div>
+            </div>
 
-          <div>
-            <h3 className="font-semibold mb-4 uppercase tracking-wider">Collections</h3>
-            <ul className="space-y-2">
-              {footerLinks.collections.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-brand-white/80 hover:text-brand-white transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+            {/* Contact & Social */}
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400">Get in Touch</h3>
+              
+              {/* Contact Info */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3 text-sm">
+                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-300">Colombo, Sri Lanka</span>
+                </div>
+                <div className="flex items-center space-x-3 text-sm">
+                  <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <a href="tel:+94771234567" className="text-gray-300 hover:text-white transition-colors">
+                    +94 77 123 4567
+                  </a>
+                </div>
+                <div className="flex items-center space-x-3 text-sm">
+                  <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <a href="mailto:hello@sohrel.lk" className="text-gray-300 hover:text-white transition-colors">
+                    hello@sohrel.lk
+                  </a>
+                </div>
+              </div>
 
-          <div>
-            <h3 className="font-semibold mb-4 uppercase tracking-wider">Help</h3>
-            <ul className="space-y-2 mb-6">
-              {footerLinks.help.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-brand-white/80 hover:text-brand-white transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            
-            <h3 className="font-semibold mb-4 uppercase tracking-wider">Company</h3>
-            <ul className="space-y-2">
-              {footerLinks.company.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-brand-white/80 hover:text-brand-white transition-colors text-sm"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              {/* Social Links */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Follow Us</h4>
+                <div className="flex space-x-3">
+                  {socialLinks.map(({ icon: Icon, href, label }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
+                      aria-label={label}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Footer */}
-        <div className="py-6 border-t border-brand-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-brand-white/60">
+        <div className="py-6 border-t border-gray-800">
+          <div className="flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
+            
+            {/* Copyright */}
+            <div className="text-sm text-gray-400 text-center lg:text-left">
               © {currentYear} SOHREL. All rights reserved.
             </div>
             
             {/* Payment Methods */}
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-brand-white/60">We accept:</span>
-              <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+              <span className="text-xs text-gray-400 uppercase tracking-wider">Secure Payments</span>
+              <div className="flex items-center space-x-3">
                 {paymentMethods.map((method) => (
                   <div
-                    key={method}
-                    className="px-2 py-1 bg-brand-white/10 text-xs font-medium"
+                    key={method.name}
+                    className="px-3 py-1.5 bg-gray-800 text-gray-300 text-xs font-medium tracking-wide border border-gray-700"
+                    title={method.name}
                   >
-                    {method}
+                    {method.name}
                   </div>
                 ))}
               </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,7 +58,7 @@ const FeaturedProducts = () => {
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching featured products:', error);
-      setProducts([]); // Set empty array on error
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -67,16 +66,21 @@ const FeaturedProducts = () => {
 
   if (loading) {
     return (
-      <section className="section-padding bg-brand-grey-light">
-        <div className="container-sohrel">
-          <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="py-24 md:py-32 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4 font-heading uppercase">
+              Featured Products
+            </h2>
+            <div className="w-24 h-px bg-black mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="product-card-sohrel">
-                <div className="aspect-square bg-muted animate-pulse rounded-lg"></div>
-                <div className="p-4 space-y-2">
-                  <div className="h-4 bg-muted rounded animate-pulse"></div>
-                  <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
+              <div key={i} className="group">
+                <div className="aspect-square bg-white animate-pulse mb-6"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-white rounded animate-pulse"></div>
+                  <div className="h-4 bg-white rounded w-20 animate-pulse"></div>
                 </div>
               </div>
             ))}
@@ -86,16 +90,20 @@ const FeaturedProducts = () => {
     );
   }
 
-  // Only show message if no products and not loading
   if (products.length === 0 && !loading) {
     return (
-      <section className="section-padding bg-brand-grey-light">
-        <div className="container-sohrel">
-          <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
+      <section className="py-24 md:py-32 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4 font-heading uppercase">
+              Featured Products
+            </h2>
+            <div className="w-24 h-px bg-black mx-auto"></div>
+          </div>
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No featured products available at the moment.</p>
+            <p className="text-gray-600 text-lg mb-8">No featured products available at the moment.</p>
             <Link to="/shop">
-              <Button className="btn-sohrel-primary mt-4">
+              <Button className="bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-widest px-10 py-3 h-auto transition-all duration-300">
                 VIEW ALL PRODUCTS
               </Button>
             </Link>
@@ -106,17 +114,27 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <section className="section-padding bg-brand-grey-light">
-      <div className="container-sohrel">
-        <h2 className="text-section-title text-center mb-12">FEATURED PRODUCTS</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <section className="py-24 md:py-32 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4 font-heading uppercase">
+            Featured Products
+          </h2>
+          <div className="w-24 h-px bg-black mx-auto mb-6"></div>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover our handpicked selection of premium essentials
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-        <div className="text-center mt-12">
+        
+        <div className="text-center mt-16">
           <Link to="/shop">
-            <Button className="btn-sohrel-primary">
+            <Button className="bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-widest px-10 py-3 h-auto transition-all duration-300">
               VIEW ALL PRODUCTS
             </Button>
           </Link>

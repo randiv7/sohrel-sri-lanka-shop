@@ -81,18 +81,17 @@ const CategoriesSection = () => {
 
   if (loading) {
     return (
-      <section className="section-padding">
-        <div className="container-sohrel">
-          <h2 className="text-section-title text-center mb-12">SHOP BY STYLE</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+      <section className="py-24 md:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4 font-heading uppercase">
+              Shop by Style
+            </h2>
+            <div className="w-24 h-px bg-black mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="card-sohrel animate-pulse">
-                <div className="aspect-square bg-muted mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-3/4"></div>
-                </div>
-              </div>
+              <div key={i} className="aspect-square bg-gray-100 animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -101,29 +100,41 @@ const CategoriesSection = () => {
   }
 
   return (
-    <section className="section-padding">
-      <div className="container-sohrel">
-        <h2 className="text-section-title text-center mb-12">SHOP BY STYLE</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+    <section className="py-24 md:py-32 bg-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black mb-4 font-heading uppercase">
+            Shop by Style
+          </h2>
+          <div className="w-24 h-px bg-black mx-auto mb-6"></div>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Explore our curated collections designed for every aesthetic
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10">
           {displayCategories.map((category) => (
             <Link
               key={category.id}
               to={`/category/${category.slug}`}
-              className="card-sohrel group hover:bg-brand-grey-light transition-all duration-300"
+              className="group relative aspect-[4/3] md:aspect-[5/4] lg:aspect-square overflow-hidden bg-gray-100 transition-all duration-500 hover:shadow-xl"
             >
-              <div className="aspect-square bg-brand-grey-light mb-4 overflow-hidden">
-                <img
-                  src={category.image_url || '/placeholder.svg'}
-                  alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+              {/* Full Image Background */}
+              <img
+                src={category.image_url || '/placeholder.svg'}
+                alt={category.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              
+              {/* Dark Overlay */}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all duration-500"></div>
+              
+              {/* Centered Category Name */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <h3 className="text-white text-lg md:text-xl lg:text-2xl font-medium uppercase tracking-wide text-center px-4 transition-transform duration-500 group-hover:scale-105">
+                  {category.name}
+                </h3>
               </div>
-              <h3 className="font-semibold text-lg mb-2 group-hover:text-muted-foreground transition-colors">
-                {category.name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {category.description}
-              </p>
             </Link>
           ))}
         </div>
