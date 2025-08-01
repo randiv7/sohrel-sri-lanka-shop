@@ -131,15 +131,15 @@
 @layer components {
   /* LIORA Button Variants - Ultra Refined */
   .btn-liora-primary {
-    @apply bg-black text-white border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-350 hover:bg-gray-900 focus:ring-1 focus:ring-black focus:ring-offset-2;
+    @apply bg-black text-white border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-300 hover:bg-gray-900 focus:ring-1 focus:ring-black focus:ring-offset-2;
   }
   
   .btn-liora-secondary {
-    @apply bg-transparent text-black border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-350 hover:bg-black hover:text-white focus:ring-1 focus:ring-black focus:ring-offset-2;
+    @apply bg-transparent text-black border border-black px-10 py-4 font-medium uppercase tracking-[0.2em] transition-all duration-300 hover:bg-black hover:text-white focus:ring-1 focus:ring-black focus:ring-offset-2;
   }
   
   .btn-liora-ghost {
-    @apply bg-transparent text-black border-none px-6 py-3 font-medium uppercase tracking-[0.15em] transition-all duration-350 hover:text-gray-500;
+    @apply bg-transparent text-black border-none px-6 py-3 font-medium uppercase tracking-[0.15em] transition-all duration-300 hover:text-gray-500;
   }
   
   /* LIORA Card Styles - Ultra Minimal */
