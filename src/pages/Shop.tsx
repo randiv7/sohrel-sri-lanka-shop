@@ -6,7 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, X } from "lucide-react";
 
 interface Product {
   id: string;
@@ -126,17 +126,18 @@ const Shop = () => {
     product.short_description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'LKR',
-      minimumFractionDigits: 0,
-    }).format(price);
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCategoryFilter("all");
+    setSortBy("newest");
   };
 
-  const getProductImage = (product: Product): string => {
-    const primaryImage = product.product_images?.find(img => img.is_primary);
-    return primaryImage?.image_url || '/placeholder.svg';
+  const hasActiveFilters = searchQuery !== "" || categoryFilter !== "all" || sortBy !== "newest";
+
+  const getSelectedCategoryName = () => {
+    if (categoryFilter === "all") return null;
+    const category = categories.find(c => c.id === categoryFilter);
+    return category?.name;
   };
 
   if (loading) {
@@ -144,8 +145,24 @@ const Shop = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-foreground mb-4">Shop All Products</h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Discover our complete collection of premium t-shirts designed for style and comfort
+            </p>
+          </div>
+          
+          {/* Loading Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
+                <div className="aspect-[4/5] bg-muted"></div>
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-20"></div>
+                </div>
+              </div>
+            ))}
           </div>
         </main>
         <Footer />
@@ -160,83 +177,118 @@ const Shop = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Shop All Products</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            {getSelectedCategoryName() ? `${getSelectedCategoryName()} Collection` : 'Shop All Products'}
+          </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Discover our complete collection of premium t-shirts designed for style and comfort
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          
-          <div className="flex gap-4">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-8">
+          {/* Mobile-first layout */}
+          <div className="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Filters - Horizontal scroll on mobile, flex on desktop */}
+            <div className="flex gap-3 overflow-x-auto pb-2 lg:pb-0 lg:overflow-visible lg:flex-shrink-0">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[160px] flex-shrink-0">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="name">Name A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[160px] flex-shrink-0">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="name">Name A-Z</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={clearFilters}
+                  className="flex-shrink-0 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Results Info */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-muted-foreground">
+            Showing {filteredProducts.length} of {products.length} products
+            {getSelectedCategoryName() && ` in ${getSelectedCategoryName()}`}
+          </p>
+          
+          {searchQuery && (
+            <p className="text-sm text-muted-foreground">
+              Search results for "{searchQuery}"
+            </p>
+          )}
         </div>
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No products found matching your criteria.</p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchQuery("");
-                setCategoryFilter("all");
-                setSortBy("newest");
-              }}
-              className="mt-4"
-            >
-              Clear Filters
-            </Button>
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
+                <Search className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No products found
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {searchQuery 
+                  ? "Try adjusting your search terms or filters" 
+                  : "No products match your current filters"}
+              </p>
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearFilters}>
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
-
-        {/* Results Count */}
-        <div className="text-center mt-8 text-muted-foreground">
-          Showing {filteredProducts.length} of {products.length} products
-        </div>
       </main>
 
       <Footer />

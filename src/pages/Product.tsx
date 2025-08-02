@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ShoppingCart, Heart, Share2, ArrowLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
 import RelatedProducts from "@/components/RelatedProducts";
 
 interface ProductVariant {
@@ -52,11 +55,13 @@ const Product = () => {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
+  
   const { toast } = useToast();
   const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { trackEvent } = useAnalytics();
 
   useEffect(() => {
@@ -73,9 +78,8 @@ const Product = () => {
         event_data: {
           product_id: product.id,
           product_name: product.name,
-          product_slug: product.slug,
-          product_price: product.sale_price || product.price,
-          category_id: product.category_id
+          category: product.categories?.name,
+          price: product.sale_price || product.price
         }
       });
     }
@@ -83,11 +87,13 @@ const Product = () => {
 
   const fetchProduct = async () => {
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('products')
         .select(`
           *,
-          product_images(image_url, alt_text, is_primary),
+          product_images(*),
           product_variants(*),
           categories(id, name, slug)
         `)
@@ -97,86 +103,141 @@ const Product = () => {
 
       if (error) {
         console.error('Error fetching product:', error);
+        toast({
+          title: "Product not found",
+          description: "The product you're looking for doesn't exist or has been removed.",
+          variant: "destructive",
+        });
         return;
       }
 
       setProduct(data);
       
-      // Set first variant as selected
-      if (data.product_variants?.length > 0) {
+      // Set default variant if available
+      if (data.product_variants && data.product_variants.length > 0) {
         setSelectedVariant(data.product_variants[0]);
       }
-
-      // Set primary image or first image as selected
-      const primaryImage = data.product_images?.find(img => img.is_primary);
-      if (primaryImage) {
-        setSelectedImage(primaryImage.image_url);
-      } else if (data.product_images?.length > 0) {
-        setSelectedImage(data.product_images[0].image_url);
-      }
+      
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load product details.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-US', {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-LK', {
       style: 'currency',
       currency: 'LKR',
       minimumFractionDigits: 0,
     }).format(price);
   };
 
-  const getAvailableSizes = () => {
-    return [...new Set(product?.product_variants?.map(v => v.size))];
-  };
-
-  const getAvailableColors = () => {
-    return [...new Set(product?.product_variants?.map(v => v.color))];
-  };
-
-  const handleSizeChange = (size: string) => {
-    const variant = product?.product_variants?.find(v => v.size === size);
-    if (variant) {
-      setSelectedVariant(variant);
+  const getProductImages = () => {
+    if (!product?.product_images || product.product_images.length === 0) {
+      return [{ image_url: '/placeholder.svg', alt_text: product?.name || 'Product', is_primary: true }];
     }
+    
+    // Sort images so primary comes first
+    return [...product.product_images].sort((a, b) => {
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return 0;
+    });
   };
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) {
-      toast({
-        title: "Please select a size",
-        description: "You need to select a size before adding to cart.",
-        variant: "destructive",
+    if (!product) return;
+    
+    try {
+      await addToCart(product.id, selectedVariant?.id || null, quantity);
+      
+      // Track add to cart event
+      trackEvent({
+        event_type: 'add_to_cart',
+        event_data: {
+          product_id: product.id,
+          product_name: product.name,
+          variant_id: selectedVariant?.id,
+          quantity: quantity,
+          price: selectedVariant?.price || product.sale_price || product.price
+        }
       });
-      return;
-    }
-
-    if (!product) {
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart.`,
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
       toast({
         title: "Error",
-        description: "Product not found.",
+        description: "Failed to add item to cart. Please try again.",
         variant: "destructive",
       });
-      return;
     }
+  };
 
-    await addToCart(product.id, selectedVariant.id, quantity);
+  const handleWishlistToggle = async () => {
+    if (!product) return;
     
-    // Track add to cart event
-    trackEvent({
-      event_type: 'add_to_cart',
-      event_data: {
-        product_id: product.id,
-        product_name: product.name,
-        variant_id: selectedVariant.id,
-        variant_size: selectedVariant.size,
-        quantity: quantity,
-        price: selectedVariant.price || product.sale_price || product.price
+    try {
+      if (isInWishlist(product.id)) {
+        await removeFromWishlist(product.id);
+      } else {
+        await addToWishlist(product.id);
+        
+        // Track wishlist add event
+        trackEvent({
+          event_type: 'add_to_wishlist',
+          event_data: {
+            product_id: product.id,
+            product_name: product.name,
+            price: product.sale_price || product.price
+          }
+        });
       }
-    });
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!product) return;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product.name,
+          text: product.short_description,
+          url: window.location.href,
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied",
+          description: "Product link has been copied to clipboard.",
+        });
+      }
+      
+      // Track share event
+      trackEvent({
+        event_type: 'share_product',
+        event_data: {
+          product_id: product.id,
+          product_name: product.name
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
   };
 
   if (loading) {
@@ -199,11 +260,15 @@ const Product = () => {
         <Header />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-16">
-            <h1 className="text-3xl font-bold text-foreground mb-4">Product not found</h1>
-            <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
-            <Link to="/shop">
-              <Button>Back to Shop</Button>
-            </Link>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              The product you're looking for doesn't exist or has been removed.
+            </p>
+            <Button asChild>
+              <Link to="/shop">
+                Browse Products
+              </Link>
+            </Button>
           </div>
         </main>
         <Footer />
@@ -211,13 +276,17 @@ const Product = () => {
     );
   }
 
+  const images = getProductImages();
+  const currentPrice = selectedVariant?.price || product.sale_price || product.price;
+  const originalPrice = selectedVariant?.price || product.price;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link to="/" className="hover:text-foreground">Home</Link>
           <span>/</span>
           <Link to="/shop" className="hover:text-foreground">Shop</Link>
@@ -234,38 +303,41 @@ const Product = () => {
         </div>
 
         {/* Back Button */}
-        <Link to="/shop">
-          <Button variant="outline" className="mb-6">
+        <Button variant="ghost" className="mb-6" asChild>
+          <Link to="/shop">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Shop
-          </Button>
-        </Link>
+          </Link>
+        </Button>
 
-        {/* Product Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Product Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg">
+            {/* Main Image */}
+            <div className="aspect-square overflow-hidden rounded-lg bg-muted">
               <img
-                src={selectedImage || '/placeholder.svg'}
-                alt={product.name}
+                src={images[selectedImage]?.image_url}
+                alt={images[selectedImage]?.alt_text || product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             
-            {product.product_images && product.product_images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.product_images.map((image, index) => (
+            {/* Thumbnail Images */}
+            {images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {images.map((image, index) => (
                   <button
                     key={index}
-                    onClick={() => setSelectedImage(image.image_url)}
-                    className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${
-                      selectedImage === image.image_url ? 'border-primary' : 'border-transparent'
-                    }`}
+                    onClick={() => setSelectedImage(index)}
+                    className={cn(
+                      "aspect-square overflow-hidden rounded-md border-2 transition-colors",
+                      selectedImage === index ? "border-primary" : "border-transparent"
+                    )}
                   >
                     <img
                       src={image.image_url}
-                      alt={image.alt_text}
+                      alt={image.alt_text || `${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -276,115 +348,159 @@ const Product = () => {
 
           {/* Product Info */}
           <div className="space-y-6">
+            {/* Title and Price */}
             <div>
-              {product.is_featured && (
-                <Badge className="mb-2">Featured</Badge>
-              )}
-              <h1 className="text-3xl font-bold text-foreground mb-2">{product.name}</h1>
-              <p className="text-muted-foreground">{product.short_description}</p>
-            </div>
+              <div className="flex items-center gap-2 mb-2">
+                {product.is_featured && (
+                  <Badge className="bg-primary text-primary-foreground">Featured</Badge>
+                )}
+                {product.categories && (
+                  <Badge variant="outline">{product.categories.name}</Badge>
+                )}
+              </div>
+              
+              <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
+              
+              <div className="flex items-center gap-3 mb-4">
+                {product.sale_price && !selectedVariant ? (
+                  <>
+                    <span className="text-3xl font-bold text-red-600">
+                      {formatPrice(product.sale_price)}
+                    </span>
+                    <span className="text-xl text-muted-foreground line-through">
+                      {formatPrice(product.price)}
+                    </span>
+                    <Badge variant="destructive" className="ml-2">
+                      Save {Math.round((1 - product.sale_price / product.price) * 100)}%
+                    </Badge>
+                  </>
+                ) : (
+                  <span className="text-3xl font-bold text-foreground">
+                    {formatPrice(currentPrice)}
+                  </span>
+                )}
+              </div>
 
-            {/* Price */}
-            <div className="flex items-center gap-4">
-              {product.sale_price ? (
-                <>
-                  <span className="text-3xl font-bold text-primary">
-                    {formatPrice(product.sale_price)}
-                  </span>
-                  <span className="text-xl text-muted-foreground line-through">
-                    {formatPrice(product.price)}
-                  </span>
-                  <Badge variant="destructive">
-                    Save {formatPrice(product.price - product.sale_price)}
-                  </Badge>
-                </>
-              ) : (
-                <span className="text-3xl font-bold text-foreground">
-                  {formatPrice(product.price)}
-                </span>
-              )}
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                {product.short_description}
+              </p>
             </div>
 
             {/* Variants */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Size: {selectedVariant?.size && <span className="font-normal">({selectedVariant.size})</span>}
-                </label>
-                <Select onValueChange={handleSizeChange} value={selectedVariant?.size}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getAvailableSizes().map((size) => {
-                      const variant = product.product_variants?.find(v => v.size === size);
-                      const inStock = variant && variant.stock_quantity > 0;
-                      return (
-                        <SelectItem 
-                          key={size} 
-                          value={size}
-                          disabled={!inStock}
-                        >
-                          {size} {!inStock && '(Out of Stock)'}
+            {product.product_variants && product.product_variants.length > 0 && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Size & Color</Label>
+                  <Select 
+                    value={selectedVariant?.id || ""} 
+                    onValueChange={(value) => {
+                      const variant = product.product_variants.find(v => v.id === value);
+                      setSelectedVariant(variant || null);
+                    }}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select size and color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {product.product_variants.map((variant) => (
+                        <SelectItem key={variant.id} value={variant.id}>
+                          {variant.size} - {variant.color} 
+                          {variant.price !== product.price && (
+                            <span className="ml-2 font-medium">
+                              ({formatPrice(variant.price)})
+                            </span>
+                          )}
+                          {variant.stock_quantity <= 0 && (
+                            <span className="ml-2 text-red-500">(Out of Stock)</span>
+                          )}
                         </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedVariant && (
-                <div className="text-sm text-muted-foreground">
-                  <p>Stock: {selectedVariant.stock_quantity} available</p>
-                  <p>SKU: {selectedVariant.sku}</p>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {selectedVariant && (
+                  <div className="text-sm text-muted-foreground">
+                    <p>SKU: {selectedVariant.sku}</p>
+                    <p className={selectedVariant.stock_quantity <= 5 ? "text-red-600" : ""}>
+                      {selectedVariant.stock_quantity > 0 
+                        ? `${selectedVariant.stock_quantity} in stock`
+                        : "Out of stock"
+                      }
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quantity */}
+            <div>
+              <Label className="text-sm font-medium">Quantity</Label>
+              <Select value={quantity.toString()} onValueChange={(value) => setQuantity(parseInt(value))}>
+                <SelectTrigger className="w-20 mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <Button 
+                onClick={handleAddToCart}
+                className="flex-1"
+                disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Add to Cart
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleWishlistToggle}
+                className={cn(
+                  "transition-colors duration-200",
+                  isInWishlist(product.id) && "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
+                )}
+              >
+                <Heart className={cn(
+                  "w-4 h-4 transition-all duration-200",
+                  isInWishlist(product.id) && "fill-current text-red-600"
+                )} />
+              </Button>
+              
+              <Button variant="outline" size="icon" onClick={handleShare}>
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Product Info */}
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>SKU: {product.sku}</p>
+              {product.categories && (
+                <p>Category: {product.categories.name}</p>
               )}
             </div>
-
-            {/* Quantity and Add to Cart */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Quantity</label>
-                <Select value={quantity.toString()} onValueChange={(val) => setQuantity(parseInt(val))}>
-                  <SelectTrigger className="w-24">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-4">
-                <Button 
-                  onClick={handleAddToCart}
-                  className="flex-1"
-                  disabled={!selectedVariant || selectedVariant.stock_quantity === 0}
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Add to Cart
-                </Button>
-                <Button variant="outline" size="icon">
-                  <Heart className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="icon">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Product Description */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-foreground mb-3">Product Details</h3>
-                <p className="text-muted-foreground whitespace-pre-line">
-                  {product.description}
-                </p>
-              </CardContent>
-            </Card>
           </div>
+        </div>
+
+        {/* Product Description */}
+        <div className="mb-16">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-foreground mb-3">Product Details</h3>
+              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                {product.description}
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Related Products */}

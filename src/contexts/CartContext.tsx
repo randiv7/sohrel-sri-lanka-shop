@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -136,19 +135,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           supabase.from('cart_items')
             .insert(cartInserts)
-            .then(() => refreshCart())
+            .then(() => loadCartForUser(session.user))
             .then(() => {}, err => console.warn('Cart migration failed:', err));
         } else {
-          refreshCart();
+          loadCartForUser(session.user);
         }
       } else if (event === 'INITIAL_SESSION') {
         if (session?.user) {
-          refreshCart();
+          loadCartForUser(session.user);
         } else {
-          const guestCart = restoreCartFromSession();
-          if (guestCart.length > 0) {
-            setCartItems(guestCart);
-          }
+          loadCartForGuest();
         }
       }
       
@@ -158,16 +154,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const refreshCart = async () => {
-    if (!authInitialized) return;
+  // REMOVED the duplicate initialization useEffect that was causing conflicts
 
+  const refreshCart = async () => {
     try {
       setLoading(true);
       let query = supabase
         .from('cart_items')
         .select(`
           *,
-          product:products!inner (
+          product:products (
             id, name, slug, price, sale_price, short_description, is_featured,
             product_images (image_url, alt_text, is_primary)
           ),
@@ -203,6 +199,79 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Load cart for authenticated user - bypasses React state timing issues
+  const loadCartForUser = async (currentUser: User) => {
+    try {
+      setLoading(true);
+      const query = supabase
+        .from('cart_items')
+        .select(`
+          *,
+          product:products (
+            id, name, slug, price, sale_price, short_description, is_featured,
+            product_images (image_url, alt_text, is_primary)
+          ),
+          product_variant:product_variants (
+            id, size, color, price, stock_quantity
+          )
+        `)
+        .eq('user_id', currentUser.id);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching user cart:', error);
+        return;
+      }
+
+      setCartItems(data || []);
+    } catch (error) {
+      console.error('Error in loadCartForUser:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load cart for guest user - bypasses React state timing issues
+  const loadCartForGuest = async () => {
+    try {
+      setLoading(true);
+      const sessionId = getSessionId();
+      const query = supabase
+        .from('cart_items')
+        .select(`
+          *,
+          product:products (
+            id, name, slug, price, sale_price, short_description, is_featured,
+            product_images (image_url, alt_text, is_primary)
+          ),
+          product_variant:product_variants (
+            id, size, color, price, stock_quantity
+          )
+        `)
+        .eq('session_id', sessionId)
+        .is('user_id', null);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching guest cart:', error);
+        return;
+      }
+
+      setCartItems(data || []);
+      
+      // Backup for guest users
+      if (data && data.length > 0) {
+        backupCartToSession(data);
+      }
+    } catch (error) {
+      console.error('Error in loadCartForGuest:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
     try {
       const itemData = {
@@ -213,78 +282,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session_id: user ? null : getSessionId()
       };
 
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert(itemData)
-        .select(`
-          *,
-          product:products!inner (
-            id, name, slug, price, sale_price, short_description, is_featured,
-            product_images (image_url, alt_text, is_primary)
-          ),
-          product_variant:product_variants (
-            id, size, color, price, stock_quantity
-          )
-        `);
+      // Check if item already exists
+      const existingItem = cartItems.find(item => 
+        item.product_id === productId && 
+        item.product_variant_id === variantId
+      );
 
-      if (error) {
-        // Check if item already exists and update quantity instead
-        if (error.code === '23505') {
-          // Get current item and update quantity
-          let getQuery = supabase
-            .from('cart_items')
-            .select('quantity')
-            .eq('product_id', productId);
-
-          if (variantId) {
-            getQuery = getQuery.eq('product_variant_id', variantId);
-          } else {
-            getQuery = getQuery.is('product_variant_id', null);
-          }
-
-          if (user) {
-            getQuery = getQuery.eq('user_id', user.id);
-          } else {
-            getQuery = getQuery.eq('session_id', getSessionId()).is('user_id', null);
-          }
-
-          const { data: existingItem } = await getQuery.single();
-          
-          if (existingItem) {
-            const newQuantity = existingItem.quantity + quantity;
-            let updateQuery = supabase
-              .from('cart_items')
-              .update({ quantity: newQuantity })
-              .eq('product_id', productId);
-
-            if (variantId) {
-              updateQuery = updateQuery.eq('product_variant_id', variantId);
-            } else {
-              updateQuery = updateQuery.is('product_variant_id', null);
-            }
-
-            if (user) {
-              updateQuery = updateQuery.eq('user_id', user.id);
-            } else {
-              updateQuery = updateQuery.eq('session_id', getSessionId()).is('user_id', null);
-            }
-
-            const { error: updateError } = await updateQuery;
-            
-            if (updateError) {
-              throw updateError;
-            }
-          }
-        } else {
-          throw error;
-        }
+      if (existingItem) {
+        // Update quantity instead of creating new item
+        await updateQuantity(existingItem.id, existingItem.quantity + quantity);
+        return;
       }
+
+      const { error } = await supabase
+        .from('cart_items')
+        .insert([itemData]);
+
+      if (error) throw error;
 
       await refreshCart();
       
       toast({
         title: "Added to cart",
-        description: "Item added to your cart successfully.",
+        description: "Item added to cart successfully.",
       });
     } catch (error) {
       console.error('Error adding to cart:', error);
