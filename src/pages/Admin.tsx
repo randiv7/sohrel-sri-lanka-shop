@@ -141,18 +141,18 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Admin Header */}
-      <header className="bg-background border-b border-brand-border">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-background border-b border-border">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">SOHREL Admin</h1>
-              <p className="text-muted-foreground">Dashboard</p>
+              <h1 className="text-3xl font-bold text-foreground tracking-[0.2em] uppercase">LIORA</h1>
+              <p className="text-muted-foreground tracking-wider text-sm mt-1">Admin Dashboard</p>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Welcome, {user?.email}
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-muted-foreground tracking-wide">
+                {user?.email}
               </span>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="tracking-wide">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -161,128 +161,128 @@ const Admin = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-12">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <Card className="border border-border p-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-sm font-medium tracking-wide uppercase">Products</CardTitle>
+              <Package className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProducts}</div>
-              <p className="text-xs text-muted-foreground">
-                Active products in catalog
+            <CardContent className="p-0">
+              <div className="text-3xl font-bold tracking-tight">{stats.totalProducts}</div>
+              <p className="text-xs text-muted-foreground tracking-wide mt-2">
+                Active in catalog
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          <Card className="border border-border p-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-sm font-medium tracking-wide uppercase">Orders</CardTitle>
+              <ShoppingBag className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                All time orders
+            <CardContent className="p-0">
+              <div className="text-3xl font-bold tracking-tight">{stats.totalOrders}</div>
+              <p className="text-xs text-muted-foreground tracking-wide mt-2">
+                All time
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+          <Card className="border border-border p-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-sm font-medium tracking-wide uppercase">Customers</CardTitle>
+              <Users className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-              <p className="text-xs text-muted-foreground">
-                Registered users
+            <CardContent className="p-0">
+              <div className="text-3xl font-bold tracking-tight">{stats.totalCustomers}</div>
+              <p className="text-xs text-muted-foreground tracking-wide mt-2">
+                Registered
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <Card className="border border-border p-6">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="text-sm font-medium tracking-wide uppercase">Revenue</CardTitle>
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">LKR {stats.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                From paid orders
+            <CardContent className="p-0">
+              <div className="text-3xl font-bold tracking-tight">LKR {stats.totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground tracking-wide mt-2">
+                Total earned
               </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Product Management</CardTitle>
-              <CardDescription>
-                Add, edit, and manage your product catalog
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="border border-border">
+            <CardHeader className="pb-6">
+              <CardTitle className="tracking-wide">Product Management</CardTitle>
+              <CardDescription className="text-muted-foreground tracking-wide">
+                Manage your product catalog
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full" onClick={() => window.location.href = '/admin/products/new'}>
+              <div className="space-y-4">
+                <Button className="w-full tracking-wide" onClick={() => window.location.href = '/admin/products/new'}>
                   Add New Product
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/products'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/products'}>
                   Manage Products
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/categories'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/categories'}>
                   Manage Categories
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Management</CardTitle>
-              <CardDescription>
-                View and manage customer orders
+          <Card className="border border-border">
+            <CardHeader className="pb-6">
+              <CardTitle className="tracking-wide">Order Management</CardTitle>
+              <CardDescription className="text-muted-foreground tracking-wide">
+                Manage customer orders
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full" onClick={() => window.location.href = '/admin/orders'}>
+              <div className="space-y-4">
+                <Button className="w-full tracking-wide" onClick={() => window.location.href = '/admin/orders'}>
                   View All Orders
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/orders?status=pending'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/orders?status=pending'}>
                   Pending Orders
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/analytics'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/analytics'}>
                   Sales Analytics
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Store Settings</CardTitle>
-              <CardDescription>
-                Configure your store settings and preferences
+          <Card className="border border-border">
+            <CardHeader className="pb-6">
+              <CardTitle className="tracking-wide">Store Settings</CardTitle>
+              <CardDescription className="text-muted-foreground tracking-wide">
+                Configure store preferences
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full" onClick={() => window.location.href = '/admin/settings'}>
+              <div className="space-y-4">
+                <Button className="w-full tracking-wide" onClick={() => window.location.href = '/admin/settings'}>
                   <Settings className="h-4 w-4 mr-2" />
                   Store Settings
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/manage-users'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/manage-users'}>
                   Manage Users
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/users'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/users'}>
                   Manage Admins
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = '/admin/coupons'}>
+                <Button variant="outline" className="w-full tracking-wide" onClick={() => window.location.href = '/admin/coupons'}>
                   Manage Coupons
                 </Button>
               </div>
@@ -290,21 +290,6 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Recent Activity */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Latest orders and activity on your store
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No recent activity to display</p>
-              <p className="text-sm mt-2">Order activity will appear here once you have orders</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

@@ -114,57 +114,59 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Shield className="h-12 w-12 text-primary" />
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-6">
+            <Shield className="h-16 w-16 text-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">SOHREL Admin</h1>
-          <p className="text-muted-foreground">Sign in to admin dashboard</p>
+          <h1 className="text-4xl font-bold text-foreground mb-4 tracking-[0.2em] uppercase">LIORA</h1>
+          <p className="text-muted-foreground tracking-wide">Admin Access Portal</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Access</CardTitle>
-            <CardDescription>
-              Enter your admin credentials to access the dashboard
+        <Card className="border border-border">
+          <CardHeader className="pb-8">
+            <CardTitle className="tracking-wide text-center">Administrative Access</CardTitle>
+            <CardDescription className="text-center tracking-wide">
+              Enter credentials to access the admin dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSignIn} className="space-y-6">
+              <div className="space-y-3">
                 <Input
                   type="email"
-                  placeholder="Admin Email"
+                  placeholder="Email Address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="tracking-wide"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Input
                   type="password"
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="tracking-wide"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full tracking-wide py-6" 
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    Authenticating...
                   </>
                 ) : (
                   <>
                     <Shield className="mr-2 h-4 w-4" />
-                    Sign In to Admin
+                    Access Admin Panel
                   </>
                 )}
               </Button>
@@ -172,20 +174,20 @@ const AdminLogin = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-8">
           <Button 
             variant="link" 
             onClick={() => window.location.href = '/'}
-            className="text-muted-foreground"
+            className="text-muted-foreground tracking-wide"
           >
-            ← Back to Store
+            ← Return to Store
           </Button>
         </div>
 
-        <div className="mt-8 p-4 bg-muted rounded-lg">
-          <p className="text-sm text-muted-foreground text-center">
-            <strong>Note:</strong> Admin access is restricted to authorized personnel only. 
-            Please contact system administrator if you need admin privileges.
+        <div className="mt-8 p-6 border border-border rounded-lg">
+          <p className="text-sm text-muted-foreground text-center tracking-wide">
+            <strong>Restricted Access:</strong> Admin privileges required. 
+            Contact your system administrator for access credentials.
           </p>
         </div>
       </div>

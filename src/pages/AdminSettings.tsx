@@ -32,9 +32,9 @@ interface StoreSettings {
 
 const AdminSettings = () => {
   const [settings, setSettings] = useState<StoreSettings>({
-    store_name: 'SOHREL',
-    store_description: 'Premium fashion and lifestyle store in Sri Lanka',
-    contact_email: 'info@sohrel.com',
+    store_name: 'LIORA',
+    store_description: 'Minimalist fashion and lifestyle for the modern individual',
+    contact_email: 'info@liora.com',
     contact_phone: '+94 70 123 4567',
     address: '123 Main Street',
     city: 'Colombo',
