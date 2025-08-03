@@ -186,25 +186,25 @@ const Shop = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-8">
           {/* Mobile-first layout */}
           <div className="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-12 h-12 text-base"
               />
             </div>
             
             {/* Filters - Horizontal scroll on mobile, flex on desktop */}
             <div className="flex gap-3 overflow-x-auto pb-2 lg:pb-0 lg:overflow-visible lg:flex-shrink-0">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[160px] flex-shrink-0">
-                  <Filter className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-[180px] h-12 flex-shrink-0">
+                  <Filter className="h-5 w-5 mr-2" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,8 +218,8 @@ const Shop = () => {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[160px] flex-shrink-0">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-[180px] h-12 flex-shrink-0">
+                  <SlidersHorizontal className="h-5 w-5 mr-2" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,11 +234,11 @@ const Shop = () => {
               {hasActiveFilters && (
                 <Button 
                   variant="outline" 
-                  size="sm"
+                  size="default"
                   onClick={clearFilters}
-                  className="flex-shrink-0 text-xs"
+                  className="flex-shrink-0 text-sm h-12 px-4"
                 >
-                  <X className="h-3 w-3 mr-1" />
+                  <X className="h-4 w-4 mr-2" />
                   Clear
                 </Button>
               )}
@@ -283,7 +283,7 @@ const Shop = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

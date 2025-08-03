@@ -137,15 +137,15 @@ const HeroSection = () => {
       </div>
 
       {/* Content Overlay */}
-      <div className="relative z-10 text-center text-white px-4">
+      <div className="relative z-10 text-center text-white px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
-          <p className="text-lg md:text-xl lg:text-2xl font-light mb-12 max-w-2xl mx-auto leading-relaxed opacity-90">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-light mb-8 sm:mb-12 max-w-2xl mx-auto leading-relaxed opacity-90">
             Premium essentials for the modern soul. Crafted with precision, 
             designed for those who appreciate the beauty of simplicity.
           </p>
           <div className="flex justify-center">
             <Link to="/shop">
-              <Button className="bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-widest px-12 py-4 h-auto transition-all duration-300">
+              <Button className="bg-black text-white hover:bg-gray-800 text-sm sm:text-base font-medium uppercase tracking-widest px-8 sm:px-12 py-4 sm:py-5 h-auto transition-all duration-300 min-h-[48px] min-w-[200px]">
                 EXPLORE COLLECTION
               </Button>
             </Link>
@@ -154,18 +154,24 @@ const HeroSection = () => {
       </div>
       
       {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
         {heroImages.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+            className={`rounded-full transition-all duration-300 min-h-[44px] min-w-[44px] flex items-center justify-center ${
               index === currentIndex 
-                ? 'bg-white w-8' 
-                : 'bg-white/50 hover:bg-white/75'
+                ? 'bg-white/20' 
+                : 'bg-white/10 hover:bg-white/15'
             }`}
             aria-label={`Go to slide ${index + 1}`}
-          />
+          >
+            <div className={`rounded-full transition-all duration-300 ${
+              index === currentIndex 
+                ? 'bg-white w-6 h-3' 
+                : 'bg-white/60 w-3 h-3 hover:bg-white/80'
+            }`} />
+          </button>
         ))}
       </div>
     </section>

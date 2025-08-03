@@ -140,46 +140,46 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
 
         {/* Subtle hover overlay with actions */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-[400ms] flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-[400ms] flex gap-2">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-[400ms] flex gap-3">
             <Button 
               size="sm" 
-              className="bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms]"
+              className="bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms] h-12 w-12 p-0"
               onClick={handleAddToCart}
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-5 w-5" />
             </Button>
             <Button 
               size="sm" 
               variant="outline" 
               className={cn(
-                "bg-white border-white hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms]",
+                "bg-white border-white hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms] h-12 w-12 p-0",
                 inWishlist && "bg-red-500 text-white border-red-500"
               )}
               onClick={handleWishlistToggle}
             >
-              <Heart className={cn("h-4 w-4", inWishlist && "fill-current")} />
+              <Heart className={cn("h-5 w-5", inWishlist && "fill-current")} />
             </Button>
           </div>
         </div>
 
         {/* Image indicator dots */}
         {productImages.hasMultipleImages && (
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1">
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
             <div className={cn(
-              "w-1.5 h-1.5 rounded-full transition-colors duration-[600ms]",
+              "w-2 h-2 rounded-full transition-colors duration-[600ms]",
               !isHovered ? "bg-white" : "bg-white/50"
             )} />
             <div className={cn(
-              "w-1.5 h-1.5 rounded-full transition-colors duration-[600ms]",
+              "w-2 h-2 rounded-full transition-colors duration-[600ms]",
               isHovered ? "bg-white" : "bg-white/50"
             )} />
           </div>
         )}
       </div>
 
-      <div className="p-3">
+      <div className="p-4 sm:p-3">
         <Link to={`/product/${product.slug}`}>
-          <h3 className="font-medium text-sm uppercase tracking-wider mb-1 hover:text-muted-foreground transition-colors duration-[250ms]">
+          <h3 className="font-medium text-sm sm:text-xs uppercase tracking-wider mb-2 sm:mb-1 hover:text-muted-foreground transition-colors duration-[250ms] leading-tight">
             {product.name}
           </h3>
         </Link>

@@ -74,11 +74,11 @@ const Header = () => {
           {/* Mobile Menu Button */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden text-white hover:text-gray-300 hover:bg-gray-800">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="md:hidden text-white hover:text-gray-300 hover:bg-gray-800 h-12 w-12">
+                <Menu className="h-7 w-7" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 bg-black border-gray-800">
+            <SheetContent side="left" className="w-[90vw] max-w-sm bg-black border-gray-800">
               <div className="flex flex-col space-y-6 mt-8">
                 <Link to="/" className="text-2xl font-bold font-heading text-white">
                   LIORA
@@ -120,14 +120,14 @@ const Header = () => {
           </nav>
 
           {/* Header Icons */}
-          <div className="flex items-center space-x-2 md:space-x-4">
-            <Button variant="ghost" size="icon" className="relative text-white hover:text-gray-300 hover:bg-gray-800" asChild>
+          <div className="flex items-center space-x-1 md:space-x-4">
+            <Button variant="ghost" size="icon" className="relative text-white hover:text-gray-300 hover:bg-gray-800 h-11 w-11 md:h-10 md:w-10" asChild>
               <Link to="/wishlist">
-                <Heart className="h-5 w-5" />
+                <Heart className="h-6 w-6 md:h-5 md:w-5" />
                 {wishlistItems.length > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white text-black"
+                    className="absolute -top-1 -right-1 h-6 w-6 md:h-5 md:w-5 flex items-center justify-center p-0 text-xs bg-white text-black min-w-6 md:min-w-5"
                   >
                     {wishlistItems.length}
                   </Badge>
@@ -135,13 +135,13 @@ const Header = () => {
               </Link>
             </Button>
             
-            <Button variant="ghost" size="icon" className="relative text-white hover:text-gray-300 hover:bg-gray-800" asChild>
+            <Button variant="ghost" size="icon" className="relative text-white hover:text-gray-300 hover:bg-gray-800 h-11 w-11 md:h-10 md:w-10" asChild>
               <Link to="/cart">
-                <ShoppingCart className="h-5 w-5" />
+                <ShoppingCart className="h-6 w-6 md:h-5 md:w-5" />
                 {cartCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-white text-black"
+                    className="absolute -top-1 -right-1 h-6 w-6 md:h-5 md:w-5 flex items-center justify-center p-0 text-xs bg-white text-black min-w-6 md:min-w-5"
                   >
                     {cartCount}
                   </Badge>
@@ -152,8 +152,8 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white hover:text-gray-300 hover:bg-gray-800">
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="text-white hover:text-gray-300 hover:bg-gray-800 h-11 w-11 md:h-10 md:w-10">
+                    <User className="h-6 w-6 md:h-5 md:w-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -181,9 +181,9 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="icon" className="text-white hover:text-gray-300 hover:bg-gray-800" asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:text-gray-300 hover:bg-gray-800 h-11 w-11 md:h-10 md:w-10" asChild>
                 <Link to="/auth">
-                  <User className="h-5 w-5" />
+                  <User className="h-6 w-6 md:h-5 md:w-5" />
                 </Link>
               </Button>
             )}
