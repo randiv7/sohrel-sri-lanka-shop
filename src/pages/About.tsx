@@ -1,185 +1,207 @@
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-16 max-w-4xl">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            About SOHREL
+        <div className="text-center mb-20">
+          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 tracking-tight">
+            LIORA
           </h1>
-          <p className="text-muted-foreground text-lg max-w-3xl mx-auto leading-relaxed">
-            We're passionate about creating premium t-shirts that combine comfort, 
-            style, and self-expression. Every design tells a story, every fabric choice 
-            matters, and every detail is crafted with care.
+          <p className="text-xl md:text-2xl text-muted-foreground font-light leading-relaxed max-w-2xl mx-auto">
+            Redefining casual wear through minimalist design, premium quality, and timeless style.
           </p>
         </div>
 
         {/* Story Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-6">Our Story</h2>
-            <div className="space-y-4 text-muted-foreground">
-              <p>
-                Founded with a vision to redefine casual wear, SOHREL began as a small 
-                studio with big dreams. We believe that what you wear should reflect 
-                who you are – comfortable, confident, and unapologetically unique.
+        <div className="mb-20">
+          <div className="prose prose-lg mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-8 tracking-tight">
+              Our Story
+            </h2>
+            <div className="space-y-6 text-muted-foreground leading-relaxed">
+              <p className="text-lg">
+                Founded with a vision to create the perfect t-shirt, Liora began as a pursuit 
+                of simplicity in a world of complexity. We believe that true style lies not in 
+                excess, but in the careful curation of essential pieces.
               </p>
-              <p>
-                From our first sketch to our latest collection, we've remained committed 
-                to quality craftsmanship, sustainable practices, and designs that speak 
-                to the individual spirit of our customers.
+              <p className="text-lg">
+                Every thread, every cut, every detail is considered with the understanding that 
+                what you wear should enhance who you are, not overshadow it. We craft garments 
+                that become better with time, like the confidence they inspire.
               </p>
-              <p>
-                Today, SOHREL continues to grow, but our core mission remains the same: 
-                creating t-shirts that you'll love to wear, again and again.
+              <p className="text-lg">
+                Liora represents more than clothing—it's a philosophy of intentional living, 
+                where quality supersedes quantity, and authenticity outweighs trends.
               </p>
             </div>
-          </div>
-          <div className="relative">
-            <img
-              src="https://images.unsplash.com/photo-1556821840-3a9b5bbfe21e?w=600&h=400"
-              alt="SOHREL Workshop"
-              className="rounded-2xl shadow-lg w-full"
-            />
           </div>
         </div>
 
         {/* Values Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-foreground mb-12">
-            Our Values
+        <div className="mb-20">
+          <h2 className="text-3xl md:text-4xl font-semibold text-center text-foreground mb-16 tracking-tight">
+            What Drives Us
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center p-6">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
+            <Card className="border-none shadow-none bg-transparent">
+              <CardContent className="text-center p-8">
+                <div className="w-16 h-16 bg-foreground rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-8 h-8 bg-background rounded-sm"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">Quality First</h3>
-                <p className="text-muted-foreground">
-                  We use only premium materials and ethical manufacturing processes 
-                  to create t-shirts that last.
+                <h3 className="text-xl font-semibold text-foreground mb-4">Simplicity</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We strip away the unnecessary to reveal what truly matters—clean lines, 
+                  perfect fits, and timeless appeal.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center p-6">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-                    </svg>
-                  </div>
+            <Card className="border-none shadow-none bg-transparent">
+              <CardContent className="text-center p-8">
+                <div className="w-16 h-16 border-2 border-foreground rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-6 h-6 border border-foreground rounded-full"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">Creative Design</h3>
-                <p className="text-muted-foreground">
-                  Every design is thoughtfully created to express individuality 
-                  and inspire confidence.
+                <h3 className="text-xl font-semibold text-foreground mb-4">Quality</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Premium materials and meticulous craftsmanship ensure each piece 
+                  becomes a lasting part of your wardrobe.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center p-6">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                    </svg>
-                  </div>
+            <Card className="border-none shadow-none bg-transparent">
+              <CardContent className="text-center p-8">
+                <div className="w-16 h-16 bg-foreground rounded-sm flex items-center justify-center mx-auto mb-6">
+                  <div className="w-4 h-4 bg-background"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-3">Sustainability</h3>
-                <p className="text-muted-foreground">
-                  We're committed to environmentally responsible practices 
-                  throughout our supply chain.
+                <h3 className="text-xl font-semibold text-foreground mb-4">Authenticity</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  We create for individuals who value substance over spectacle, 
+                  quality over quantity, and confidence over conformity.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Team Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center text-foreground mb-12">
-            Meet Our Team
+        {/* Mission Statement */}
+        <div className="mb-20">
+          <Card className="border-2 border-foreground bg-transparent">
+            <CardContent className="p-12 text-center">
+              <blockquote className="text-2xl md:text-3xl font-light text-foreground leading-relaxed">
+                "To create clothing that empowers authentic self-expression through 
+                the marriage of minimalist design and uncompromising quality."
+              </blockquote>
+              <div className="mt-8">
+                <div className="w-12 h-0.5 bg-foreground mx-auto"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Process Section */}
+        <div className="mb-20">
+          <h2 className="text-3xl md:text-4xl font-semibold text-center text-foreground mb-16 tracking-tight">
+            Our Process
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <img
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
-                  alt="Team Member"
-                  className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="text-xl font-semibold text-foreground mb-2">Alex Chen</h3>
-                <Badge variant="outline" className="mb-3">Creative Director</Badge>
-                <p className="text-muted-foreground text-sm">
-                  Leading our design vision with 8+ years in fashion and graphic design.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <img
-                  src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face"
-                  alt="Team Member"
-                  className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="text-xl font-semibold text-foreground mb-2">Sarah Johnson</h3>
-                <Badge variant="outline" className="mb-3">Production Manager</Badge>
-                <p className="text-muted-foreground text-sm">
-                  Ensuring quality and sustainability in every piece we create.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
-                  alt="Team Member"
-                  className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                />
-                <h3 className="text-xl font-semibold text-foreground mb-2">Mike Rodriguez</h3>
-                <Badge variant="outline" className="mb-3">Customer Success</Badge>
-                <p className="text-muted-foreground text-sm">
-                  Dedicated to making sure every customer has an amazing experience.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h3 className="text-2xl font-semibold text-foreground mb-6">Design Philosophy</h3>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                Each design begins with a question: what can we remove while adding value? 
+                Our process involves extensive research into fabric behavior, fit dynamics, 
+                and the psychology of comfort.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                We test extensively, refine relentlessly, and only release pieces that 
+                meet our exacting standards for both aesthetic appeal and functional excellence.
+              </p>
+            </div>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-2 h-2 bg-foreground rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Research & Ideation</h4>
+                  <p className="text-sm text-muted-foreground">Understanding needs before creating solutions</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-2 h-2 bg-foreground rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Material Selection</h4>
+                  <p className="text-sm text-muted-foreground">Sourcing the finest fabrics for comfort and durability</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-2 h-2 bg-foreground rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Precision Crafting</h4>
+                  <p className="text-sm text-muted-foreground">Meticulous attention to every stitch and seam</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-2 h-2 bg-foreground rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Quality Assurance</h4>
+                  <p className="text-sm text-muted-foreground">Rigorous testing ensures lasting quality</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-2xl p-8 md:p-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Join the SOHREL Community
+        {/* Sustainability Section */}
+        <div className="mb-20">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-8 tracking-tight">
+              Conscious Creation
+            </h2>
+            <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto mb-8">
+              Sustainability isn't an afterthought—it's integral to everything we do. From our choice 
+              of organic materials to our zero-waste production methods, we're committed to creating 
+              beautiful clothing without compromising our planet's future.
+            </p>
+            <div className="flex justify-center">
+              <div className="grid grid-cols-3 gap-8 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-foreground mb-2">100%</div>
+                  <div className="text-sm text-muted-foreground uppercase tracking-wide">Organic Cotton</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-foreground mb-2">Zero</div>
+                  <div className="text-sm text-muted-foreground uppercase tracking-wide">Waste Production</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-foreground mb-2">Carbon</div>
+                  <div className="text-sm text-muted-foreground uppercase tracking-wide">Neutral Shipping</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Call to Action */}
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-8 tracking-tight">
+            Join the Movement
           </h2>
-          <p className="text-muted-foreground text-lg mb-6 max-w-2xl mx-auto">
-            Be the first to know about new collections, exclusive designs, 
-            and special offers. Follow us on social media and subscribe to our newsletter.
+          <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+            Discover clothing that reflects your values and enhances your authentic self. 
+            Every piece tells a story—let yours be one of intention and style.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-              Subscribe to Newsletter
-            </button>
-            <button className="border border-border text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted transition-colors">
-              Follow on Instagram
-            </button>
-          </div>
+          <Button asChild size="lg" className="px-12 py-6 text-lg">
+            <Link to="/shop">
+              Explore Collection
+            </Link>
+          </Button>
         </div>
       </main>
 
