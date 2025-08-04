@@ -118,12 +118,18 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <Link to={`/product/${product.slug}`} className="block w-full h-full">
+        <Link 
+          to={`/product/${product.slug}`} 
+          className="block w-full h-full cursor-pointer relative z-10 group/image"
+          aria-label={`View details for ${product.name}`}
+        >
           <SimpleImage
             src={currentImage}
             alt={currentAlt}
-            className="w-full h-full object-cover transition-all duration-[800ms] ease-out group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-[800ms] ease-out group-hover:scale-105 group-hover/image:opacity-95"
           />
+          {/* Subtle hover indicator for image */}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover/image:bg-opacity-5 transition-all duration-300 pointer-events-none" />
         </Link>
         
         {product.sale_price && (
