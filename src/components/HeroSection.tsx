@@ -8,20 +8,20 @@ const HeroSection = () => {
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Hero images - using dynamic imports to handle missing files gracefully
+  // Hero images - FIXED: Use proper public folder paths for production
   const heroImages = [
     { 
-      src: "/src/assets/hero1.png", 
+      src: "/assets/hero1.png", // This will look in public/assets/hero1.png
       alt: "Premium minimalist collection 1",
       fallback: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&h=1080&fit=crop"
     },
     { 
-      src: "/src/assets/hero2.png", 
+      src: "/assets/hero2.png", // This will look in public/assets/hero2.png
       alt: "Premium minimalist collection 2",
       fallback: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=1920&h=1080&fit=crop"
     },
     { 
-      src: "/src/assets/hero3.png", 
+      src: "/assets/hero3.png", // This will look in public/assets/hero3.png
       alt: "Premium minimalist collection 3",
       fallback: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1920&h=1080&fit=crop"
     }
@@ -36,7 +36,7 @@ const HeroSection = () => {
           return new Promise<string>((resolve) => {
             img.onload = () => resolve(image.src);
             img.onerror = () => {
-              console.log(`Hero image ${index + 1} not found, using fallback`);
+              console.log(`Hero image ${index + 1} not found at ${image.src}, using fallback`);
               resolve(image.fallback);
             };
             img.src = image.src;
