@@ -13,7 +13,7 @@ interface AdImage {
 
 const adImages: AdImage[] = [
   {
-    src: "/src/assets/ad1.jpg",
+    src: "/src/assets/ban1.jpeg",
     alt: "Summer Collection 2024",
     title: "Summer Collection",
     subtitle: "Discover Light & Airy Essentials",
@@ -21,7 +21,7 @@ const adImages: AdImage[] = [
     fallback: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=500&fit=crop&crop=center"
   },
   {
-    src: "/src/assets/ad2.jpg", 
+    src: "/src/assets/ban2.jpeg", 
     alt: "Sustainable Materials",
     title: "Sustainable Luxury",
     subtitle: "Crafted for Tomorrow",
@@ -29,7 +29,7 @@ const adImages: AdImage[] = [
     fallback: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&crop=center"
   },
   {
-    src: "/src/assets/ad3.jpg",
+    src: "/src/assets/ban3.jpeg",
     alt: "New Arrivals",
     title: "New Arrivals",
     subtitle: "Limited Edition Pieces",
