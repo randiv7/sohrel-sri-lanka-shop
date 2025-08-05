@@ -183,25 +183,25 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
         )}
       </div>
 
-      <div className="p-4 sm:p-3">
+      <div className="p-3 sm:p-4">
         <Link to={`/product/${product.slug}`}>
-          <h3 className="font-medium text-sm sm:text-xs uppercase tracking-wider mb-2 sm:mb-1 hover:text-muted-foreground transition-colors duration-[250ms] leading-tight">
+          <h3 className="font-medium text-sm sm:text-base uppercase tracking-wider mb-2 hover:text-muted-foreground transition-colors duration-[250ms] line-clamp-2">
             {product.name}
           </h3>
         </Link>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 text-sm sm:text-base">
           {product.sale_price ? (
             <>
-              <span className="font-semibold text-red-600">
+              <span className="font-semibold text-red-600 whitespace-nowrap">
                 {formatPrice(product.sale_price)}
               </span>
-              <span className="text-sm text-muted-foreground line-through">
+              <span className="text-xs sm:text-sm text-muted-foreground line-through whitespace-nowrap">
                 {formatPrice(product.price)}
               </span>
             </>
           ) : (
-            <span className="font-semibold text-foreground">
+            <span className="font-semibold text-foreground whitespace-nowrap">
               {formatPrice(product.price)}
             </span>
           )}
