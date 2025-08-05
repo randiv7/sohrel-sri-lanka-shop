@@ -6,6 +6,8 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, X } from "lucide-react";
 
 interface Product {
@@ -185,26 +187,97 @@ const Shop = () => {
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mb-8">
-          {/* Mobile-first layout */}
-          <div className="space-y-4 lg:space-y-0 lg:flex lg:items-center lg:gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 text-base"
-              />
+        {/* Search Bar */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-12 h-12 text-base"
+            />
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {/* Mobile Filter Sheet */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                    {hasActiveFilters && (
+                      <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 text-xs rounded-full">
+                        {(categoryFilter !== "all" ? 1 : 0) + (sortBy !== "newest" ? 1 : 0)}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[400px]">
+                  <SheetHeader className="pb-6">
+                    <SheetTitle>Filter Products</SheetTitle>
+                  </SheetHeader>
+                  
+                  <div className="space-y-6">
+                    {/* Category Filter */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-foreground">Category</h4>
+                      <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <SelectTrigger className="w-full h-12">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Sort Filter */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-foreground">Sort By</h4>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-full h-12">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="newest">Newest First</SelectItem>
+                          <SelectItem value="price-low">Price: Low to High</SelectItem>
+                          <SelectItem value="price-high">Price: High to Low</SelectItem>
+                          <SelectItem value="name">Name A-Z</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Clear Filters Button */}
+                    {hasActiveFilters && (
+                      <Button 
+                        variant="outline" 
+                        onClick={clearFilters}
+                        className="w-full h-12"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Clear All Filters
+                      </Button>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
-            
-            {/* Filters - Stack on mobile, flex on desktop */}
-            <div className="flex flex-col gap-3 sm:flex-row lg:flex-shrink-0">
+
+            {/* Desktop Filters */}
+            <div className="hidden md:flex items-center gap-3">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[180px] h-12 flex-shrink-0">
-                  <Filter className="h-5 w-5 mr-2" />
+                <SelectTrigger className="w-[160px] h-10">
+                  <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -218,8 +291,8 @@ const Shop = () => {
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] h-12 flex-shrink-0">
-                  <SlidersHorizontal className="h-5 w-5 mr-2" />
+                <SelectTrigger className="w-[150px] h-10">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -230,13 +303,12 @@ const Shop = () => {
                 </SelectContent>
               </Select>
 
-              {/* Clear Filters Button */}
               {hasActiveFilters && (
                 <Button 
                   variant="outline" 
-                  size="default"
+                  size="sm"
                   onClick={clearFilters}
-                  className="flex-shrink-0 text-sm h-12 px-4"
+                  className="h-10"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Clear
@@ -244,6 +316,36 @@ const Shop = () => {
               )}
             </div>
           </div>
+
+          {/* Active Filters */}
+          {hasActiveFilters && (
+            <div className="hidden sm:flex items-center gap-2">
+              {categoryFilter !== "all" && (
+                <Badge variant="secondary" className="text-xs">
+                  {getSelectedCategoryName()}
+                  <button 
+                    onClick={() => setCategoryFilter("all")}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {sortBy !== "newest" && (
+                <Badge variant="secondary" className="text-xs">
+                  {sortBy === "price-low" ? "Price ↑" : 
+                   sortBy === "price-high" ? "Price ↓" : 
+                   sortBy === "name" ? "A-Z" : "Newest"}
+                  <button 
+                    onClick={() => setSortBy("newest")}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Results Info */}
