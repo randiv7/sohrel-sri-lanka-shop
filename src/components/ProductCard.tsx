@@ -114,7 +114,7 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
   return (
     <div className={cn("bg-white rounded-lg shadow-sm overflow-hidden group", className)}>
       <div 
-        className="relative aspect-[4/5] overflow-hidden"
+        className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -183,14 +183,14 @@ const ProductCard = ({ product, className }: ProductCardProps) => {
         )}
       </div>
 
-      <div className="p-3 sm:p-4">
+      <div className="p-2 sm:p-4">
         <Link to={`/product/${product.slug}`}>
-          <h3 className="font-medium text-sm sm:text-base uppercase tracking-wider mb-2 hover:text-muted-foreground transition-colors duration-[250ms] line-clamp-2">
+          <h3 className="font-medium text-xs sm:text-base uppercase tracking-wide mb-1 sm:mb-2 hover:text-muted-foreground transition-colors duration-[250ms] line-clamp-2 leading-tight">
             {product.name}
           </h3>
         </Link>
         
-        <div className="flex items-center space-x-2 text-sm sm:text-base">
+        <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-base">
           {product.sale_price ? (
             <>
               <span className="font-semibold text-red-600 whitespace-nowrap">
