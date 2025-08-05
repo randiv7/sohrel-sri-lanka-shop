@@ -91,7 +91,7 @@ const CategoriesSection = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-100 animate-pulse"></div>
+              <div key={i} className="aspect-[3/2] sm:aspect-[4/3] md:aspect-[5/4] lg:aspect-square bg-gray-100 animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -112,12 +112,12 @@ const CategoriesSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10">
           {displayCategories.map((category) => (
             <Link
               key={category.id}
               to={`/category/${category.slug}`}
-              className="group relative aspect-[4/3] md:aspect-[5/4] lg:aspect-square overflow-hidden bg-gray-100 transition-all duration-500 hover:shadow-xl"
+              className="group relative aspect-[3/2] sm:aspect-[4/3] md:aspect-[5/4] lg:aspect-square overflow-hidden bg-gray-100 transition-all duration-500 hover:shadow-xl"
             >
               {/* Full Image Background */}
               <img

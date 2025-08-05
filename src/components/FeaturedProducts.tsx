@@ -74,7 +74,7 @@ const FeaturedProducts = () => {
             </h2>
             <div className="w-24 h-px bg-black mx-auto"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="group">
                 <div className="aspect-square bg-white animate-pulse mb-6"></div>
@@ -126,7 +126,7 @@ const FeaturedProducts = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

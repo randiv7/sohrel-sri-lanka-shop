@@ -153,7 +153,7 @@ const Shop = () => {
           </div>
           
           {/* Loading Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden animate-pulse">
                 <div className="aspect-[4/5] bg-muted"></div>
@@ -200,8 +200,8 @@ const Shop = () => {
               />
             </div>
             
-            {/* Filters - Horizontal scroll on mobile, flex on desktop */}
-            <div className="flex gap-3 overflow-x-auto pb-2 lg:pb-0 lg:overflow-visible lg:flex-shrink-0">
+            {/* Filters - Stack on mobile, flex on desktop */}
+            <div className="flex flex-col gap-3 sm:flex-row lg:flex-shrink-0">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="w-[180px] h-12 flex-shrink-0">
                   <Filter className="h-5 w-5 mr-2" />
@@ -283,7 +283,7 @@ const Shop = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
