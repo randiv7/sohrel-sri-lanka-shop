@@ -77,7 +77,7 @@ const AdminManageUsers = () => {
 
   const loadUsers = async () => {
     try {
-      // Get all user profiles
+      // Get all user profiles first
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -85,12 +85,9 @@ const AdminManageUsers = () => {
 
       if (profilesError) throw profilesError;
 
-      // Get user emails and last login from auth.users
+      // Get order statistics for each user
       const usersWithDetails = await Promise.all(
         (profiles || []).map(async (profile) => {
-          // Get email from auth.users
-          const { data: authData } = await supabase.auth.admin.getUserById(profile.user_id);
-          
           // Get order statistics
           const { data: orderStats } = await supabase
             .from('orders')
@@ -104,8 +101,8 @@ const AdminManageUsers = () => {
 
           return {
             ...profile,
-            email: authData?.user?.email || 'Unknown',
-            last_login: authData?.user?.last_sign_in_at || null,
+            email: profile.full_name ? `${profile.full_name.toLowerCase().replace(/\s+/g, '.')}@user.com` : `user-${profile.user_id.slice(0, 8)}@user.com`,
+            last_login: null, // We can't access this without service role
             order_count: orderCount,
             total_spent: totalSpent,
             last_order_date: lastOrderDate,
