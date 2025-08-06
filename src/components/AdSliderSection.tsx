@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { SimpleImage } from "@/components/SimpleImage";
 
 interface AdImage {
   src: string;
@@ -8,33 +7,30 @@ interface AdImage {
   title?: string;
   subtitle?: string;
   linkTo: string;
-  fallback: string;
 }
 
+// Updated to use correct image filenames: ban1.jpeg, ban2.jpeg, ban3.jpeg
 const adImages: AdImage[] = [
   {
-    src: "/src/assets/ban1.jpeg",
+    src: "/assets/ban1.jpeg", // Updated filename
     alt: "Summer Collection 2024",
     title: "Summer Collection",
     subtitle: "Discover Light & Airy Essentials",
-    linkTo: "/collections",
-    fallback: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=500&fit=crop&crop=center"
+    linkTo: "/collections"
   },
   {
-    src: "/src/assets/ban2.jpeg", 
+    src: "/assets/ban2.jpeg", // Updated filename
     alt: "Sustainable Materials",
     title: "Sustainable Luxury",
     subtitle: "Crafted for Tomorrow",
-    linkTo: "/about",
-    fallback: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&crop=center"
+    linkTo: "/about"
   },
   {
-    src: "/src/assets/ban3.jpeg",
+    src: "/assets/ban3.jpeg", // Updated filename - Note: you mentioned "ban3.jepg" but I assume you meant "ban3.jpeg"
     alt: "New Arrivals",
     title: "New Arrivals",
     subtitle: "Limited Edition Pieces",
-    linkTo: "/shop",
-    fallback: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&h=500&fit=crop&crop=center"
+    linkTo: "/shop"
   }
 ];
 
@@ -63,32 +59,15 @@ const AdSliderSection = () => {
   }, [isLoading]);
 
   const loadImages = async () => {
-    const imagePromises = adImages.map(async (image, index) => {
-      try {
-        const img = new Image();
-        img.src = image.src;
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-        return { index, src: image.src };
-      } catch {
-        return { index, src: image.fallback };
-      }
+    // Simply use the image paths directly - no complex loading logic
+    const newLoadedImages: { [key: number]: string } = {};
+    adImages.forEach((image, index) => {
+      newLoadedImages[index] = image.src;
+      console.log(`Ad image ${index + 1} path:`, image.src);
     });
-
-    try {
-      const results = await Promise.all(imagePromises);
-      const newLoadedImages: { [key: number]: string } = {};
-      results.forEach(({ index, src }) => {
-        newLoadedImages[index] = src;
-      });
-      setLoadedImages(newLoadedImages);
-    } catch (error) {
-      console.error('Error loading ad images:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    
+    setLoadedImages(newLoadedImages);
+    setIsLoading(false);
   };
 
   const goToSlide = (index: number) => {
@@ -112,7 +91,7 @@ const AdSliderSection = () => {
   }
 
   const currentImage = adImages[currentIndex];
-  const currentImageSrc = loadedImages[currentIndex] || currentImage.fallback;
+  const currentImageSrc = loadedImages[currentIndex] || currentImage.src;
 
   return (
     <section className="py-16 bg-background">
@@ -122,12 +101,17 @@ const AdSliderSection = () => {
             to={currentImage.linkTo}
             className="block w-full h-full"
           >
-            <SimpleImage
+            <img
               src={currentImageSrc}
               alt={currentImage.alt}
               className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-105 ${
                 isTransitioning ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
               }`}
+              onError={(e) => {
+                console.warn(`Failed to load ad image: ${currentImageSrc}`);
+                // Hide the broken image instead of showing a placeholder
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
             {(currentImage.title || currentImage.subtitle) && (
