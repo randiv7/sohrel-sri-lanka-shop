@@ -144,19 +144,40 @@ export type Database = {
       }
       categories: {
         Row: {
+          created_at: string | null
           description: string | null
+          display_order: number | null
           id: number
+          image_url: string | null
+          is_active: boolean | null
           name: string
+          parent_id: number | null
+          slug: string
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           description?: string | null
+          display_order?: number | null
           id?: never
+          image_url?: string | null
+          is_active?: boolean | null
           name: string
+          parent_id?: number | null
+          slug: string
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           description?: string | null
+          display_order?: number | null
           id?: never
+          image_url?: string | null
+          is_active?: boolean | null
           name?: string
+          parent_id?: number | null
+          slug?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -847,20 +868,50 @@ export type Database = {
         Row: {
           base_price: number | null
           category_id: number | null
+          created_at: string | null
+          description: string | null
           id: number
+          is_active: boolean | null
+          is_featured: boolean | null
           name: string
+          price: number | null
+          sale_price: number | null
+          short_description: string | null
+          slug: string
+          stock_quantity: number | null
+          updated_at: string | null
         }
         Insert: {
           base_price?: number | null
           category_id?: number | null
+          created_at?: string | null
+          description?: string | null
           id?: never
+          is_active?: boolean | null
+          is_featured?: boolean | null
           name: string
+          price?: number | null
+          sale_price?: number | null
+          short_description?: string | null
+          slug: string
+          stock_quantity?: number | null
+          updated_at?: string | null
         }
         Update: {
           base_price?: number | null
           category_id?: number | null
+          created_at?: string | null
+          description?: string | null
           id?: never
+          is_active?: boolean | null
+          is_featured?: boolean | null
           name?: string
+          price?: number | null
+          sale_price?: number | null
+          short_description?: string | null
+          slug?: string
+          stock_quantity?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
