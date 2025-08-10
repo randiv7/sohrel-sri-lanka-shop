@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description?: string;

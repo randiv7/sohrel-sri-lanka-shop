@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   price: number;
@@ -24,8 +24,8 @@ interface Product {
 }
 
 interface RelatedProductsProps {
-  currentProductId: string;
-  categoryId?: string;
+  currentProductId: number;
+  categoryId?: number;
 }
 
 const RelatedProducts = ({ currentProductId, categoryId }: RelatedProductsProps) => {

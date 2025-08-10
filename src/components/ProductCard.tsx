@@ -9,7 +9,7 @@ import { SimpleImage } from "@/components/SimpleImage";
 import { cn } from "@/lib/utils";
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   price: number;

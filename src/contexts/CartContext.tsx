@@ -4,14 +4,14 @@ import { useToast } from '@/hooks/use-toast';
 import type { User } from '@supabase/supabase-js';
 
 interface CartItem {
-  id: string;
-  product_id: string;
-  product_variant_id?: string;
+  id: number;
+  product_id: number;
+  product_variant_id?: number;
   quantity: number;
   user_id?: string;
   session_id?: string;
   product?: {
-    id: string;
+    id: number;
     name: string;
     slug: string;
     price: number;
@@ -25,7 +25,7 @@ interface CartItem {
     }>;
   };
   product_variant?: {
-    id: string;
+    id: number;
     size: string;
     color?: string;
     price?: number;
@@ -38,9 +38,9 @@ interface CartContextType {
   cartCount: number;
   loading: boolean;
   authInitialized: boolean;
-  addToCart: (productId: string, variantId: string | null, quantity?: number) => Promise<void>;
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  removeFromCart: (itemId: string) => Promise<void>;
+  addToCart: (productId: number, variantId: number | null, quantity?: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: number) => Promise<void>;
   clearCart: () => Promise<void>;
   getCartTotal: () => number;
   refreshCart: () => Promise<void>;
@@ -272,7 +272,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const addToCart = async (productId: string, variantId: string | null, quantity: number = 1) => {
+  const addToCart = async (productId: number, variantId: number | null, quantity: number = 1) => {
     try {
       const itemData = {
         product_id: productId,
@@ -316,7 +316,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateQuantity = async (itemId: string, quantity: number) => {
+  const updateQuantity = async (itemId: number, quantity: number) => {
     try {
       if (quantity <= 0) {
         await removeFromCart(itemId);
@@ -341,7 +341,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const removeFromCart = async (itemId: string) => {
+  const removeFromCart = async (itemId: number) => {
     try {
       const { error } = await supabase
         .from('cart_items')

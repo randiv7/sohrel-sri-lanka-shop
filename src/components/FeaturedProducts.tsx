@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "@/components/ProductCard";
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   price: number;

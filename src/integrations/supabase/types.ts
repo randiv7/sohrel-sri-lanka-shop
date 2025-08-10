@@ -116,23 +116,45 @@ export type Database = {
       cart_items: {
         Row: {
           cart_id: number | null
+          created_at: string | null
           id: number
+          product_id: number | null
           product_variant_id: number | null
           quantity: number
+          session_id: string | null
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           cart_id?: number | null
+          created_at?: string | null
           id?: never
+          product_id?: number | null
           product_variant_id?: number | null
           quantity: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           cart_id?: number | null
+          created_at?: string | null
           id?: never
+          product_id?: number | null
           product_variant_id?: number | null
           quantity?: number
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cart_items_product_variant_id_fkey"
             columns: ["product_variant_id"]
@@ -807,7 +829,7 @@ export type Database = {
           id: string
           image_url: string
           is_primary: boolean | null
-          product_id: string
+          product_id: number
         }
         Insert: {
           alt_text?: string | null
@@ -816,7 +838,7 @@ export type Database = {
           id?: string
           image_url: string
           is_primary?: boolean | null
-          product_id: string
+          product_id: number
         }
         Update: {
           alt_text?: string | null
@@ -825,9 +847,17 @@ export type Database = {
           id?: string
           image_url?: string
           is_primary?: boolean | null
-          product_id?: string
+          product_id?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_variants: {
         Row: {
