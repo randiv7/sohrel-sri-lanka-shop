@@ -29,183 +29,160 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, className }: ProductCardProps) => {
-  const { addToCart } = useCart();
-  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
   const [secondaryImageLoaded, setSecondaryImageLoaded] = useState(false);
+  const { addToCart } = useCart();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-LK', {
-      style: 'currency',
-      currency: 'LKR',
-      minimumFractionDigits: 0,
-    }).format(price);
+  // Preload secondary image on hover
+  useEffect(() => {
+    if (isHovered && !secondaryImageLoaded) {
+      const productImages = getProductImages(product);
+      if (productImages.hasMultipleImages) {
+        const img = new Image();
+        img.onload = () => setSecondaryImageLoaded(true);
+        img.src = productImages.secondary;
+      }
+    }
+  }, [isHovered, secondaryImageLoaded, product]);
+
+  const formatPrice = (price: number): string => {
+    return `LKR ${price.toLocaleString()}`;
   };
 
   const getProductImages = (product: Product) => {
     const images = product.product_images || [];
     const primaryImage = images.find(img => img.is_primary) || images[0];
-    const secondaryImage = images.find(img => !img.is_primary) || images[1];
+    const secondaryImage = images.find(img => !img.is_primary) || images[1] || primaryImage;
     
     return {
-      primary: primaryImage?.image_url || '/placeholder.svg',
-      secondary: secondaryImage?.image_url || primaryImage?.image_url || '/placeholder.svg',
+      primary: primaryImage?.image_url || 'https://placehold.co/400x400/f3f4f6/6b7280?text=Product',
+      secondary: secondaryImage?.image_url || primaryImage?.image_url || 'https://placehold.co/400x400/f3f4f6/6b7280?text=Product',
       primaryAlt: primaryImage?.alt_text || product.name,
       secondaryAlt: secondaryImage?.alt_text || product.name,
       hasMultipleImages: images.length > 1
     };
   };
 
-  const productImages = getProductImages(product);
-
-  // Preload secondary image
-  useEffect(() => {
-    if (productImages.hasMultipleImages && productImages.secondary !== productImages.primary) {
-      const img = new Image();
-      img.onload = () => setSecondaryImageLoaded(true);
-      img.onerror = () => setSecondaryImageLoaded(false);
-      img.src = productImages.secondary;
-    }
-  }, [productImages.secondary, productImages.primary, productImages.hasMultipleImages]);
-
-  // Check if touch device
-  const isTouchDevice = useCallback(() => {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  }, []);
-
-  const shouldShowHoverEffect = !isTouchDevice() && 
-    productImages.hasMultipleImages && 
-    secondaryImageLoaded &&
-    productImages.secondary !== productImages.primary;
-
-  const handleMouseEnter = () => {
-    if (shouldShowHoverEffect) {
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (shouldShowHoverEffect) {
-      setIsHovered(false);
-    }
-  };
-
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await addToCart(product.id, null, 1);
+    await addToCart(product.id, null);
   };
 
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (isInWishlist(product.id)) {
-      await removeFromWishlist(product.id);
+    if (isInWishlist(product.id.toString())) {
+      await removeFromWishlist(product.id.toString());
     } else {
-      await addToWishlist(product.id);
+      await addToWishlist(product.id.toString());
     }
   };
 
+  const productImages = getProductImages(product);
   const currentImage = isHovered ? productImages.secondary : productImages.primary;
   const currentAlt = isHovered ? productImages.secondaryAlt : productImages.primaryAlt;
-  const inWishlist = isInWishlist(product.id);
+  const inWishlist = isInWishlist(product.id.toString());
 
   return (
     <div className={cn("bg-white rounded-lg shadow-sm overflow-hidden group", className)}>
-      <div 
-        className="relative aspect-[3/4] sm:aspect-[4/5] overflow-hidden"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+      <Link
+        to={`/product/${product.slug}`}
+        className="block relative overflow-hidden aspect-square"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <Link 
-          to={`/product/${product.slug}`} 
-          className="block w-full h-full cursor-pointer relative z-10 group/image"
-          aria-label={`View details for ${product.name}`}
-        >
-          <SimpleImage
-            src={currentImage}
-            alt={currentAlt}
-            className="w-full h-full object-cover transition-all duration-[800ms] ease-out group-hover:scale-105 group-hover/image:opacity-95"
-          />
-          {/* Subtle hover indicator for image */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover/image:bg-opacity-5 transition-all duration-300 pointer-events-none" />
-        </Link>
+        <SimpleImage
+          src={currentImage}
+          alt={currentAlt}
+          className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105"
+        />
         
-        {product.sale_price && (
-          <Badge className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1">
+        {/* Sale Badge */}
+        {product.sale_price && product.sale_price < product.price && (
+          <Badge 
+            variant="destructive" 
+            className="absolute top-3 left-3 z-10 bg-red-600 hover:bg-red-700"
+          >
             SALE
           </Badge>
         )}
         
+        {/* Featured Badge */}
         {product.is_featured && (
-          <Badge className="absolute top-3 right-3 bg-black text-white text-xs px-2 py-1">
+          <Badge 
+            variant="secondary" 
+            className="absolute top-3 right-3 z-10 bg-black text-white hover:bg-gray-800"
+          >
             FEATURED
           </Badge>
         )}
-
-        {/* Subtle hover overlay with actions */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-[400ms] flex items-center justify-center">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-[400ms] flex gap-3">
-            <Button 
-              size="sm" 
-              className="bg-white text-black hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms] h-12 w-12 p-0"
-              onClick={handleAddToCart}
-            >
-              <ShoppingCart className="h-5 w-5" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
+        
+        {/* Action Buttons */}
+        <div className="absolute bottom-4 left-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+          <Button
+            onClick={handleAddToCart}
+            className="flex-1 bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-wider"
+            size="sm"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Add to Cart
+          </Button>
+          
+          <Button
+            onClick={handleWishlistToggle}
+            variant="outline"
+            size="sm"
+            className={cn(
+              "bg-white/90 backdrop-blur-sm border-gray-200 hover:border-gray-300",
+              inWishlist && "bg-red-50 border-red-200 text-red-600"
+            )}
+          >
+            <Heart 
               className={cn(
-                "bg-white border-white hover:bg-black hover:text-white shadow-lg transition-colors duration-[250ms] h-12 w-12 p-0",
-                inWishlist && "bg-red-500 text-white border-red-500"
-              )}
-              onClick={handleWishlistToggle}
-            >
-              <Heart className={cn("h-5 w-5", inWishlist && "fill-current")} />
-            </Button>
-          </div>
+                "w-4 h-4",
+                inWishlist && "fill-current"
+              )} 
+            />
+          </Button>
         </div>
-
-        {/* Image indicator dots */}
-        {productImages.hasMultipleImages && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-            <div className={cn(
-              "w-2 h-2 rounded-full transition-colors duration-[600ms]",
-              !isHovered ? "bg-white" : "bg-white/50"
-            )} />
-            <div className={cn(
-              "w-2 h-2 rounded-full transition-colors duration-[600ms]",
-              isHovered ? "bg-white" : "bg-white/50"
-            )} />
-          </div>
-        )}
-      </div>
-
-      <div className="p-2 sm:p-4">
-        <Link to={`/product/${product.slug}`}>
-          <h3 className="font-medium text-xs sm:text-base uppercase tracking-wide mb-1 sm:mb-2 hover:text-muted-foreground transition-colors duration-[250ms] line-clamp-2 leading-tight">
+      </Link>
+      
+      {/* Product Info */}
+      <div className="p-4">
+        <Link 
+          to={`/product/${product.slug}`}
+          className="block hover:text-gray-600 transition-colors duration-200"
+        >
+          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
         </Link>
         
-        <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-base">
-          {product.sale_price ? (
+        <div className="flex items-center gap-2">
+          {product.sale_price && product.sale_price < product.price ? (
             <>
-              <span className="font-semibold text-red-600 whitespace-nowrap">
+              <span className="text-lg font-semibold text-red-600">
                 {formatPrice(product.sale_price)}
               </span>
-              <span className="text-xs sm:text-sm text-muted-foreground line-through whitespace-nowrap">
+              <span className="text-sm text-gray-500 line-through">
                 {formatPrice(product.price)}
               </span>
             </>
           ) : (
-            <span className="font-semibold text-foreground whitespace-nowrap">
+            <span className="text-lg font-semibold text-gray-900">
               {formatPrice(product.price)}
             </span>
           )}
         </div>
+        
+        {product.short_description && (
+          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+            {product.short_description}
+          </p>
+        )}
       </div>
     </div>
   );

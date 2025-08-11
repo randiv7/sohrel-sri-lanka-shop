@@ -6,11 +6,11 @@ import { useRobustWishlist } from '@/hooks/useRobustWishlist';
 
 interface WishlistItem {
   id: string;
-  product_id: string;
+  product_id: number;
   user_id: string;
   created_at: string;
   product?: {
-    id: string;
+    id: number;
     name: string;
     slug: string;
     price: number;
@@ -176,7 +176,8 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const removeFromWishlist = async (productId: string) => {
-    if (!user) return;
+    const numericProductId = parseInt(productId);
+    if (!user || isNaN(numericProductId)) return;
 
     try {
       await robustWishlistRemove(productId, user.id);
