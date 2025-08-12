@@ -39,7 +39,6 @@ interface Product {
   slug: string;
   price: number;
   sale_price?: number;
-  sku?: string;
   is_active: boolean;
   is_featured: boolean;
   created_at: string;
@@ -116,7 +115,7 @@ const AdminProducts = () => {
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,sku.ilike.%${searchTerm}%`);
+        query = query.ilike('name', `%${searchTerm}%`);
       }
 
       const { data, error } = await query;
@@ -302,7 +301,7 @@ const AdminProducts = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder="Search products by name or SKU..."
+                    placeholder="Search products by name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -347,7 +346,7 @@ const AdminProducts = () => {
                         />
                         <div>
                           <p className="font-medium">{product.name}</p>
-                          <p className="text-sm text-muted-foreground">{product.sku}</p>
+                          <p className="text-sm text-muted-foreground">{product.slug}</p>
                         </div>
                       </div>
                     </TableCell>

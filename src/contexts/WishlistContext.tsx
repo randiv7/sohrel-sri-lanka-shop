@@ -144,7 +144,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [user, robustWishlistFetch]);
 
   const isInWishlist = useCallback((productId: string): boolean => {
-    return wishlistItems.some(item => item.product_id === productId);
+    return wishlistItems.some(item => item.product_id === parseInt(productId));
   }, [wishlistItems]);
 
   const addToWishlist = async (productId: string) => {

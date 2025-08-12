@@ -154,7 +154,7 @@ export const useRobustWishlist = () => {
         const { error } = await supabase
           .from('wishlists')
           .insert([{
-            product_id: productId,
+            product_id: parseInt(productId),
             user_id: userId
           }]);
 
@@ -169,11 +169,11 @@ export const useRobustWishlist = () => {
   const robustWishlistRemove = useCallback(async (productId: string, userId: string) => {
     return robustFetch(
       async () => {
-        const { error } = await supabase
-          .from('wishlists')
-          .delete()
-          .eq('product_id', productId)
-          .eq('user_id', userId);
+      const { error } = await supabase
+        .from('wishlists')
+        .delete()
+        .eq('product_id', parseInt(productId))
+        .eq('user_id', userId);
 
         if (error) throw error;
       },

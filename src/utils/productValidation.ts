@@ -8,7 +8,6 @@ export interface ProductFormData {
   short_description: string;
   price: string;
   sale_price: string;
-  sku: string;
   category_id: string;
   is_active: boolean;
   is_featured: boolean;
@@ -24,7 +23,6 @@ export interface ProductVariant {
   color: string;
   price: number;
   stock_quantity: number;
-  sku: string;
 }
 
 export interface ValidationError {
@@ -65,10 +63,6 @@ export const validateProductForm = async (
     }
   }
 
-  // SKU validation
-  if (productData.sku && productData.sku.length > 100) {
-    errors.push({ field: 'sku', message: 'SKU must be less than 100 characters' });
-  }
 
   // Variants validation
   if (variants.length === 0) {
@@ -86,10 +80,6 @@ export const validateProductForm = async (
       if (variant.stock_quantity < 0) {
         errors.push({ field: `variant_${index}_stock`, message: `Variant ${index + 1}: Stock quantity cannot be negative` });
       }
-      
-      if (variant.sku && variant.sku.length > 100) {
-        errors.push({ field: `variant_${index}_sku`, message: `Variant ${index + 1}: SKU must be less than 100 characters` });
-      }
     });
 
     // Check for duplicate variant combinations
@@ -103,36 +93,6 @@ export const validateProductForm = async (
     });
   }
 
-  // Check SKU uniqueness if provided
-  if (productData.sku) {
-    const { data: existingSku } = await supabase
-      .from('products')
-      .select('id')
-      .eq('sku', productData.sku)
-      .maybeSingle();
-    
-    if (existingSku) {
-      errors.push({ field: 'sku', message: 'SKU already exists' });
-    }
-  }
-
-  // Check variant SKU uniqueness
-  const variantSkus = variants.filter(v => v.sku).map(v => v.sku);
-  if (variantSkus.length > 0) {
-    const { data: existingVariantSkus } = await supabase
-      .from('product_variants')
-      .select('sku')
-      .in('sku', variantSkus);
-    
-    if (existingVariantSkus && existingVariantSkus.length > 0) {
-      const existingSkuSet = new Set(existingVariantSkus.map(item => item.sku));
-      variants.forEach((variant, index) => {
-        if (variant.sku && existingSkuSet.has(variant.sku)) {
-          errors.push({ field: `variant_${index}_sku`, message: `Variant ${index + 1}: SKU already exists` });
-        }
-      });
-    }
-  }
 
   return errors;
 };

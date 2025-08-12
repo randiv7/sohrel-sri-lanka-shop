@@ -47,7 +47,7 @@ import {
 import { SimpleImage } from "@/components/SimpleImage";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description?: string;
@@ -332,8 +332,8 @@ const AdminCategories = () => {
         // Update existing category
         const { error } = await supabase
           .from('categories')
-          .update(categoryData)
-          .eq('id', editingCategory.id);
+        .update(categoryData)
+        .eq('id', editingCategory.id);
 
         if (error) {
           console.error('Error updating category:', error);
@@ -393,7 +393,7 @@ const AdminCategories = () => {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', categoryId);
+        .eq('id', parseInt(categoryId));
 
       if (error) {
         console.error('Error deleting category:', error);
@@ -594,7 +594,7 @@ const AdminCategories = () => {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={() => handleDeleteCategory(category.id, category.name)}
+                            onClick={() => handleDeleteCategory(category.id.toString(), category.name)}
                             className="text-red-600"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />

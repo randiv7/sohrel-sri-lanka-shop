@@ -21,7 +21,7 @@ import { generateUniqueSlug, validateSlug } from "@/utils/slugUtils";
 import { validateProductForm, formatValidationErrors, type ProductFormData, type ProductVariant } from "@/utils/productValidation";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
 }
 
@@ -46,7 +46,6 @@ const AdminProductNew = () => {
     short_description: "",
     price: "",
     sale_price: "",
-    sku: "",
     category_id: "",
     is_active: true,
     is_featured: false,
@@ -167,8 +166,7 @@ const AdminProductNew = () => {
       size: "",
       color: "",
       price: parseFloat(productData.price) || 0,
-      stock_quantity: 0,
-      sku: ""
+      stock_quantity: 0
     }]);
   };
 
@@ -326,8 +324,8 @@ const AdminProductNew = () => {
         short_description: productData.short_description || null,
         price: parseFloat(productData.price),
         sale_price: productData.sale_price ? parseFloat(productData.sale_price) : null,
-        sku: productData.sku || null,
-        category_id: productData.category_id || null,
+        
+        category_id: productData.category_id ? parseInt(productData.category_id) : null,
         is_active: productData.is_active,
         is_featured: productData.is_featured,
         weight: productData.weight ? parseFloat(productData.weight) : null,
@@ -383,8 +381,7 @@ const AdminProductNew = () => {
         size: variant.size,
         color: variant.color || null,
         price: variant.price,
-        stock_quantity: variant.stock_quantity,
-        sku: variant.sku || null
+        stock_quantity: variant.stock_quantity
       }));
 
       const { error: variantError } = await supabase
@@ -558,7 +555,7 @@ const AdminProductNew = () => {
               <CardTitle>Pricing & Inventory</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="price">Regular Price *</Label>
                   <Input
@@ -586,16 +583,6 @@ const AdminProductNew = () => {
                     placeholder="0.00"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    id="sku"
-                    value={productData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                    placeholder="PRODUCT-SKU"
-                    maxLength={100}
-                  />
-                </div>
               </div>
 
               <div>
@@ -606,7 +593,7 @@ const AdminProductNew = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                      <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
                       </SelectItem>
                     ))}
@@ -647,7 +634,7 @@ const AdminProductNew = () => {
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                           <Label>Size *</Label>
                           <Input
@@ -682,15 +669,6 @@ const AdminProductNew = () => {
                             min="0"
                             value={variant.stock_quantity}
                             onChange={(e) => updateVariant(index, 'stock_quantity', parseInt(e.target.value) || 0)}
-                          />
-                        </div>
-                        <div>
-                          <Label>SKU</Label>
-                          <Input
-                            value={variant.sku}
-                            onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                            placeholder="VARIANT-SKU"
-                            maxLength={100}
                           />
                         </div>
                       </div>
