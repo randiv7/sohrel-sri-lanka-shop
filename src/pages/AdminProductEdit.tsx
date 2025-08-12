@@ -18,36 +18,30 @@ import {
 import { ArrowLeft, Plus, X } from "lucide-react";
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface ProductVariant {
-  id?: string;
+  id?: number;
   size: string;
   color: string;
   price: number;
   stock_quantity: number;
-  sku: string;
+  sku?: string;
 }
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description?: string;
   short_description?: string;
   price: number;
   sale_price?: number;
-  sku?: string;
-  category_id?: string;
+  category_id?: number;
   is_active: boolean;
   is_featured: boolean;
-  weight?: number;
-  dimensions?: string;
-  meta_title?: string;
-  meta_description?: string;
-  tags?: string[];
   product_variants: ProductVariant[];
 }
 
@@ -67,15 +61,9 @@ const AdminProductEdit = () => {
     short_description: "",
     price: "",
     sale_price: "",
-    sku: "",
     category_id: "",
     is_active: true,
-    is_featured: false,
-    weight: "",
-    dimensions: "",
-    meta_title: "",
-    meta_description: "",
-    tags: ""
+    is_featured: false
   });
 
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -151,7 +139,7 @@ const AdminProductEdit = () => {
           *,
           product_variants(*)
         `)
-        .eq('id', id)
+        .eq('id', parseInt(id!))
         .single();
 
       if (error) {
@@ -175,15 +163,9 @@ const AdminProductEdit = () => {
         short_description: data.short_description || "",
         price: data.price.toString(),
         sale_price: data.sale_price?.toString() || "",
-        sku: data.sku || "",
-        category_id: data.category_id || "",
+        category_id: data.category_id?.toString() || "",
         is_active: data.is_active,
-        is_featured: data.is_featured,
-        weight: data.weight?.toString() || "",
-        dimensions: data.dimensions || "",
-        meta_title: data.meta_title || "",
-        meta_description: data.meta_description || "",
-        tags: data.tags?.join(', ') || ""
+        is_featured: data.is_featured
       });
 
       setVariants(data.product_variants || []);
@@ -203,8 +185,7 @@ const AdminProductEdit = () => {
       size: "",
       color: "",
       price: parseFloat(productData.price) || 0,
-      stock_quantity: 0,
-      sku: ""
+      stock_quantity: 0
     }]);
   };
 
@@ -224,7 +205,7 @@ const AdminProductEdit = () => {
     }
   };
 
-  const deleteVariant = async (variantId: string) => {
+  const deleteVariant = async (variantId: number) => {
     try {
       const { error } = await supabase
         .from('product_variants')
@@ -286,15 +267,9 @@ const AdminProductEdit = () => {
         short_description: productData.short_description || null,
         price: parseFloat(productData.price),
         sale_price: productData.sale_price ? parseFloat(productData.sale_price) : null,
-        sku: productData.sku || null,
-        category_id: productData.category_id || null,
+        category_id: productData.category_id ? parseInt(productData.category_id) : null,
         is_active: productData.is_active,
         is_featured: productData.is_featured,
-        weight: productData.weight ? parseFloat(productData.weight) : null,
-        dimensions: productData.dimensions || null,
-        meta_title: productData.meta_title || null,
-        meta_description: productData.meta_description || null,
-        tags: productData.tags ? productData.tags.split(',').map(tag => tag.trim()) : null,
         updated_at: new Date().toISOString()
       };
 
@@ -479,15 +454,6 @@ const AdminProductEdit = () => {
                     placeholder="0.00"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    id="sku"
-                    value={productData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                    placeholder="PRODUCT-SKU"
-                  />
-                </div>
               </div>
 
               <div>
@@ -498,7 +464,7 @@ const AdminProductEdit = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                      <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
                       </SelectItem>
                     ))}

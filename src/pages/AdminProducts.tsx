@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   price: number;
@@ -138,7 +138,7 @@ const AdminProducts = () => {
     }
   };
 
-  const handleDeleteProduct = async (productId: string, productName: string) => {
+  const handleDeleteProduct = async (productId: number, productName: string) => {
     if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
       return;
     }

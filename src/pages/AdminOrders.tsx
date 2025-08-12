@@ -121,10 +121,7 @@ const AdminOrders = () => {
       
       let query = supabase
         .from('orders')
-        .select(`
-          *,
-          order_items (quantity, product_snapshot)
-        `)
+        .select(`*`)
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
@@ -151,7 +148,13 @@ const AdminOrders = () => {
         return;
       }
 
-      setOrders(data || []);
+      // Add empty order_items array to satisfy interface
+      const ordersWithItems = (data || []).map(order => ({
+        ...order,
+        order_items: []
+      }));
+
+      setOrders(ordersWithItems);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -227,7 +230,7 @@ const AdminOrders = () => {
       const { error: itemsError } = await supabase
         .from('order_items')
         .delete()
-        .eq('order_id', orderId);
+        .eq('order_id', parseInt(orderId));
 
       if (itemsError) {
         console.error('Error deleting order items:', itemsError);

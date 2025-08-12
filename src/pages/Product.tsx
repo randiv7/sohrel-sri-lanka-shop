@@ -17,12 +17,12 @@ import { cn } from "@/lib/utils";
 import RelatedProducts from "@/components/RelatedProducts";
 
 interface ProductVariant {
-  id: string;
+  id: number;
   size: string;
   color: string;
   price: number;
   stock_quantity: number;
-  sku: string;
+  sku?: string;
 }
 
 interface ProductImage {
@@ -32,23 +32,22 @@ interface ProductImage {
 }
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
   slug: string;
   description: string;
   short_description: string;
   price: number;
   sale_price?: number;
-  sku: string;
   is_featured: boolean;
   product_images: ProductImage[];
   product_variants: ProductVariant[];
   categories?: {
-    id: string;
+    id: number;
     name: string;
     slug: string;
   };
-  category_id?: string;
+  category_id?: number;
 }
 
 const Product = () => {
@@ -187,10 +186,10 @@ const Product = () => {
     if (!product) return;
     
     try {
-      if (isInWishlist(product.id)) {
-        await removeFromWishlist(product.id);
+      if (isInWishlist(product.id.toString())) {
+        await removeFromWishlist(product.id.toString());
       } else {
-        await addToWishlist(product.id);
+        await addToWishlist(product.id.toString());
         
         // Track wishlist add event
         trackEvent({
@@ -392,9 +391,9 @@ const Product = () => {
                 <div>
                   <Label className="text-sm font-medium">Size & Color</Label>
                   <Select 
-                    value={selectedVariant?.id || ""} 
+                    value={selectedVariant?.id?.toString() || ""} 
                     onValueChange={(value) => {
-                      const variant = product.product_variants.find(v => v.id === value);
+                      const variant = product.product_variants.find(v => v.id === parseInt(value));
                       setSelectedVariant(variant || null);
                     }}
                   >
@@ -403,7 +402,7 @@ const Product = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {product.product_variants.map((variant) => (
-                        <SelectItem key={variant.id} value={variant.id}>
+                        <SelectItem key={variant.id} value={variant.id.toString()}>
                           {variant.size} - {variant.color} 
                           {variant.price !== product.price && (
                             <span className="ml-2 font-medium">
@@ -467,12 +466,12 @@ const Product = () => {
                 onClick={handleWishlistToggle}
                 className={cn(
                   "transition-colors duration-200",
-                  isInWishlist(product.id) && "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
+                  isInWishlist(product.id.toString()) && "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
                 )}
               >
                 <Heart className={cn(
                   "w-4 h-4 transition-all duration-200",
-                  isInWishlist(product.id) && "fill-current text-red-600"
+                  isInWishlist(product.id.toString()) && "fill-current text-red-600"
                 )} />
               </Button>
               
@@ -483,7 +482,6 @@ const Product = () => {
 
             {/* Product Info */}
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>SKU: {product.sku}</p>
               {product.categories && (
                 <p>Category: {product.categories.name}</p>
               )}
