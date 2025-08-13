@@ -22,11 +22,11 @@ interface Order {
 }
 
 interface OrderItem {
-  id: string;
+  id: number;
+  order_id: number;
+  product_variant_id: number;
   quantity: number;
-  unit_price: number;
-  total_price: number;
-  product_snapshot: any;
+  price: number;
 }
 
 const OrderConfirmation = () => {
@@ -57,7 +57,7 @@ const OrderConfirmation = () => {
       const { data: itemsData, error: itemsError } = await supabase
         .from('order_items')
         .select('*')
-        .eq('order_id', orderId);
+        .eq('order_id', parseInt(orderId));
 
       if (itemsError) throw itemsError;
       setOrderItems(itemsData || []);
@@ -229,15 +229,15 @@ const OrderConfirmation = () => {
                   {orderItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-start text-sm">
                       <div className="flex-1">
-                        <p className="font-medium">{item.product_snapshot.name}</p>
+                        <p className="font-medium">Product #{item.product_variant_id}</p>
                         <p className="text-muted-foreground">
-                          Size: {item.product_snapshot.size} × {item.quantity}
+                          Quantity: {item.quantity}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatPrice(item.total_price)}</p>
+                        <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
                         <p className="text-muted-foreground text-xs">
-                          {formatPrice(item.unit_price)} each
+                          {formatPrice(item.price)} each
                         </p>
                       </div>
                     </div>

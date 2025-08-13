@@ -18,7 +18,7 @@ export const checkSlugExists = async (slug: string, excludeId?: string): Promise
       .eq('slug', slug);
     
     if (excludeId) {
-      query = query.neq('id', excludeId);
+      query = query.neq('id', parseInt(excludeId));
     }
     
     const { data, error } = await query.maybeSingle();

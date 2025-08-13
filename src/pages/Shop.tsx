@@ -10,28 +10,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, X } from "lucide-react";
 
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  short_description: string;
-  is_featured: boolean;
-  product_images: Array<{
-    image_url: string;
-    alt_text: string;
-    is_primary: boolean;
-  }>;
-  categories?: {
-    name: string;
-    slug: string;
-  };
-}
+import { Product, Category } from '@/types/global';
 
 const Shop = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -50,7 +33,7 @@ const Shop = () => {
       // Find category by slug and set filter
       const category = categories.find(c => c.slug === categoryParam);
       if (category) {
-        setCategoryFilter(category.id);
+        setCategoryFilter(String(category.id));
       }
     }
   }, [categories]);
@@ -88,7 +71,7 @@ const Shop = () => {
 
       // Apply category filter
       if (categoryFilter !== "all") {
-        query = query.eq('category_id', categoryFilter);
+        query = query.eq('category_id', parseInt(categoryFilter));
       }
 
       // Apply sorting
@@ -138,7 +121,7 @@ const Shop = () => {
 
   const getSelectedCategoryName = () => {
     if (categoryFilter === "all") return null;
-    const category = categories.find(c => c.id === categoryFilter);
+    const category = categories.find(c => c.id === parseInt(categoryFilter));
     return category?.name;
   };
 
@@ -233,7 +216,7 @@ const Shop = () => {
                         <SelectContent>
                           <SelectItem value="all">All Categories</SelectItem>
                           {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
+                            <SelectItem key={category.id} value={String(category.id)}>
                               {category.name}
                             </SelectItem>
                           ))}
@@ -283,7 +266,7 @@ const Shop = () => {
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={String(category.id)}>
                       {category.name}
                     </SelectItem>
                   ))}

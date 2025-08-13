@@ -27,11 +27,11 @@ const Wishlist = () => {
     return primaryImage?.image_url || item.product?.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
-  const handleAddToCart = async (productId: string) => {
+  const handleAddToCart = async (productId: number) => {
     await addToCart(productId, null, 1);
   };
 
-  const handleRemoveFromWishlist = async (productId: string) => {
+  const handleRemoveFromWishlist = async (productId: number) => {
     await removeFromWishlist(productId);
   };
 

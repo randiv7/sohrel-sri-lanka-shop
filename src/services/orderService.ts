@@ -2,9 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 
 interface CartItem {
-  id: string;
-  product_id: string;
-  product_variant_id?: string;
+  id: number;
+  product_id: number;
+  product_variant_id?: number;
   quantity: number;
   product?: {
     name: string;
@@ -42,22 +42,14 @@ export const createOrderWithItems = async (orderData: OrderData, cartItems: Cart
 
   if (orderError) throw orderError;
 
-  // Prepare order items for bulk insert
+  // Prepare order items for bulk insert - match actual database schema
   const orderItems = cartItems.map(item => {
     const price = item.product?.sale_price || item.product?.price || 0;
     return {
-      order_id: order.id,
-      product_id: item.product_id,
-      product_variant_id: item.product_variant_id,
+      order_id: parseInt(order.id),
+      product_variant_id: item.product_variant_id || null,
       quantity: item.quantity,
-      unit_price: price,
-      total_price: price * item.quantity,
-      product_snapshot: {
-        name: item.product?.name || 'Unknown Product',
-        size: item.product_variant?.size || 'N/A',
-        color: item.product_variant?.color || 'N/A',
-        image_url: item.product?.product_images?.[0]?.image_url || '/placeholder.svg'
-      }
+      price: price
     };
   });
 
