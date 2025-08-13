@@ -3,21 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ProductCard from "@/components/ProductCard";
-
-interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  short_description?: string;
-  is_featured: boolean;
-  product_images?: Array<{
-    image_url: string;
-    alt_text?: string;
-    is_primary: boolean;
-  }>;
-}
+import { Product } from "@/types/global";
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,6 +25,7 @@ const FeaturedProducts = () => {
           sale_price,
           short_description,
           is_featured,
+          category_id,
           product_images (
             image_url,
             alt_text,

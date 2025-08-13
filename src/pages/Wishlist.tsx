@@ -32,7 +32,7 @@ const Wishlist = () => {
   };
 
   const handleRemoveFromWishlist = async (productId: number) => {
-    await removeFromWishlist(productId);
+    await removeFromWishlist(String(productId));
   };
 
   if (!authInitialized || loading) {

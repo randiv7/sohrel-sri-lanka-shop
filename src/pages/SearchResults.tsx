@@ -8,30 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  short_description: string;
-  is_featured: boolean;
-  product_images: Array<{
-    image_url: string;
-    alt_text: string;
-    is_primary: boolean;
-  }>;
-  categories?: {
-    name: string;
-    slug: string;
-  };
-}
+import { Product, Category } from "@/types/global";
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState("relevance");
@@ -51,7 +33,7 @@ const SearchResults = () => {
     try {
       const { data, error } = await supabase
         .from('categories')
-        .select('id, name, slug')
+        .select('id, name, slug, is_active')
         .eq('is_active', true)
         .order('name');
 
@@ -89,7 +71,7 @@ const SearchResults = () => {
 
       // Apply category filter
       if (categoryFilter !== "all") {
-        supabaseQuery = supabaseQuery.eq('category_id', categoryFilter);
+        supabaseQuery = supabaseQuery.eq('category_id', parseInt(categoryFilter));
       }
 
       // Apply sorting
@@ -192,7 +174,7 @@ const SearchResults = () => {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={String(category.id)}>
                     {category.name}
                   </SelectItem>
                 ))}

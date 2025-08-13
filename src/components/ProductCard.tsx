@@ -7,21 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { SimpleImage } from "@/components/SimpleImage";
 import { cn } from "@/lib/utils";
-
-interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  short_description?: string;
-  is_featured?: boolean;
-  product_images?: Array<{
-    image_url: string;
-    alt_text?: string;
-    is_primary: boolean;
-  }>;
-}
+import { Product } from "@/types/global";
 
 interface ProductCardProps {
   product: Product;
@@ -29,160 +15,152 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, className }: ProductCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [secondaryImageLoaded, setSecondaryImageLoaded] = useState(false);
   const { addToCart } = useCart();
-  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
-  // Preload secondary image on hover
   useEffect(() => {
-    if (isHovered && !secondaryImageLoaded) {
-      const productImages = getProductImages(product);
-      if (productImages.hasMultipleImages) {
-        const img = new Image();
-        img.onload = () => setSecondaryImageLoaded(true);
-        img.src = productImages.secondary;
+    setIsWishlisted(isInWishlist(String(product.id)));
+  }, [product.id, isInWishlist]);
+
+  const handleAddToCart = useCallback(async () => {
+    try {
+      await addToCart(product.id, null, 1);
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+    }
+  }, [addToCart, product.id]);
+
+  const handleWishlistToggle = useCallback(async () => {
+    try {
+      if (isWishlisted) {
+        await removeFromWishlist(String(product.id));
+      } else {
+        await addToWishlist(String(product.id));
       }
+      setIsWishlisted(!isWishlisted);
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
     }
-  }, [isHovered, secondaryImageLoaded, product]);
+  }, [isWishlisted, removeFromWishlist, addToWishlist, product.id]);
 
-  const formatPrice = (price: number): string => {
-    return `LKR ${price.toLocaleString()}`;
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-LK', {
+      style: 'currency',
+      currency: 'LKR',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
-  const getProductImages = (product: Product) => {
-    const images = product.product_images || [];
-    const primaryImage = images.find(img => img.is_primary) || images[0];
-    const secondaryImage = images.find(img => !img.is_primary) || images[1] || primaryImage;
-    
-    return {
-      primary: primaryImage?.image_url || 'https://placehold.co/400x400/f3f4f6/6b7280?text=Product',
-      secondary: secondaryImage?.image_url || primaryImage?.image_url || 'https://placehold.co/400x400/f3f4f6/6b7280?text=Product',
-      primaryAlt: primaryImage?.alt_text || product.name,
-      secondaryAlt: secondaryImage?.alt_text || product.name,
-      hasMultipleImages: images.length > 1
-    };
+  const getProductImageUrl = () => {
+    const primaryImage = product.product_images?.find(img => img.is_primary);
+    return primaryImage?.image_url || product.product_images?.[0]?.image_url || '/placeholder.svg';
   };
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await addToCart(product.id, null);
-  };
-
-  const handleWishlistToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (isInWishlist(product.id.toString())) {
-      await removeFromWishlist(product.id.toString());
-    } else {
-      await addToWishlist(product.id.toString());
-    }
-  };
-
-  const productImages = getProductImages(product);
-  const currentImage = isHovered ? productImages.secondary : productImages.primary;
-  const currentAlt = isHovered ? productImages.secondaryAlt : productImages.primaryAlt;
-  const inWishlist = isInWishlist(product.id.toString());
+  const discountPercentage = product.sale_price 
+    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+    : 0;
 
   return (
-    <div className={cn("bg-white rounded-lg shadow-sm overflow-hidden group", className)}>
-      <Link
-        to={`/product/${product.slug}`}
-        className="block relative overflow-hidden aspect-square"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+    <div className={cn(
+      "group relative bg-card rounded-lg border border-border overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-primary/20",
+      className
+    )}>
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors duration-200"
+        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
       >
-        <SimpleImage
-          src={currentImage}
-          alt={currentAlt}
-          className="w-full h-full object-cover transition-all duration-500 ease-out group-hover:scale-105"
+        <Heart 
+          className={cn(
+            "h-4 w-4 transition-colors duration-200",
+            isWishlisted ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"
+          )} 
         />
-        
-        {/* Sale Badge */}
-        {product.sale_price && product.sale_price < product.price && (
-          <Badge 
-            variant="destructive" 
-            className="absolute top-3 left-3 z-10 bg-red-600 hover:bg-red-700"
-          >
-            SALE
-          </Badge>
-        )}
-        
-        {/* Featured Badge */}
-        {product.is_featured && (
-          <Badge 
-            variant="secondary" 
-            className="absolute top-3 right-3 z-10 bg-black text-white hover:bg-gray-800"
-          >
-            FEATURED
-          </Badge>
-        )}
-        
-        {/* Action Buttons */}
-        <div className="absolute bottom-4 left-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-          <Button
-            onClick={handleAddToCart}
-            className="flex-1 bg-black text-white hover:bg-gray-800 text-sm font-medium uppercase tracking-wider"
-            size="sm"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Add to Cart
-          </Button>
-          
-          <Button
-            onClick={handleWishlistToggle}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "bg-white/90 backdrop-blur-sm border-gray-200 hover:border-gray-300",
-              inWishlist && "bg-red-50 border-red-200 text-red-600"
-            )}
-          >
-            <Heart 
-              className={cn(
-                "w-4 h-4",
-                inWishlist && "fill-current"
-              )} 
-            />
-          </Button>
+      </button>
+
+      {/* Sale Badge */}
+      {product.sale_price && (
+        <Badge 
+          variant="destructive" 
+          className="absolute top-2 left-2 z-10 text-xs font-bold"
+        >
+          -{discountPercentage}%
+        </Badge>
+      )}
+
+      {/* Featured Badge */}
+      {product.is_featured && (
+        <Badge 
+          variant="secondary" 
+          className="absolute top-2 left-2 z-10 text-xs"
+          style={{ marginTop: product.sale_price ? '28px' : '0' }}
+        >
+          Featured
+        </Badge>
+      )}
+
+      {/* Product Image */}
+      <Link to={`/product/${product.slug}`} className="block">
+        <div className="relative overflow-hidden aspect-[4/5]">
+          <SimpleImage
+            src={getProductImageUrl()}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         </div>
       </Link>
-      
+
       {/* Product Info */}
-      <div className="p-4">
-        <Link 
-          to={`/product/${product.slug}`}
-          className="block hover:text-gray-600 transition-colors duration-200"
-        >
-          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem]">
+      <div className="p-4 space-y-3">
+        <Link to={`/product/${product.slug}`}>
+          <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {product.name}
           </h3>
         </Link>
-        
+
+        {/* Category */}
+        {product.categories && (
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">
+            {product.categories.name}
+          </p>
+        )}
+
+        {/* Price */}
         <div className="flex items-center gap-2">
-          {product.sale_price && product.sale_price < product.price ? (
+          {product.sale_price ? (
             <>
-              <span className="text-lg font-semibold text-red-600">
+              <span className="font-bold text-primary text-lg">
                 {formatPrice(product.sale_price)}
               </span>
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-muted-foreground line-through text-sm">
                 {formatPrice(product.price)}
               </span>
             </>
           ) : (
-            <span className="text-lg font-semibold text-gray-900">
+            <span className="font-bold text-foreground text-lg">
               {formatPrice(product.price)}
             </span>
           )}
         </div>
-        
+
+        {/* Description */}
         {product.short_description && (
-          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+          <p className="text-sm text-muted-foreground line-clamp-2">
             {product.short_description}
           </p>
         )}
+
+        {/* Add to Cart Button */}
+        <Button 
+          onClick={handleAddToCart}
+          className="w-full"
+          size="sm"
+        >
+          <ShoppingCart className="h-4 w-4 mr-2" />
+          Add to Cart
+        </Button>
       </div>
     </div>
   );

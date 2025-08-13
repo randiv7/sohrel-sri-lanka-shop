@@ -30,17 +30,13 @@ export interface Product {
   updated_at?: string;
   product_images?: ProductImage[];
   product_variants?: ProductVariant[];
-  categories?: Category;
+  categories?: { name: string; slug: string };
 }
 
 export interface ProductImage {
-  id: string;
-  product_id: number;
   image_url: string;
   alt_text?: string;
   is_primary: boolean;
-  display_order?: number;
-  created_at?: string;
 }
 
 export interface ProductVariant {
